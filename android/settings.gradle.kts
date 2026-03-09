@@ -24,3 +24,5 @@ plugins {
 }
 
 include(":app")
+include(":awg_tunnel")
+project(":awg_tunnel").projectDir = File(rootDir, "awg_tunnel")

@@ -1,0 +1,15 @@
+{
+  "originHash" : "1fc30f757a118ca8eca1f801f5ae8bdebb0463105ea5c724c34380e0d2788a2f",
+  "pins" : [
+    {
+      "identity" : "amneziawg-apple",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/amnezia-vpn/amneziawg-apple.git",
+      "state" : {
+        "revision" : "ca1b8138669092a01d3897b71b659f3c81da6a6d",
+        "version" : "1.1.3"
+      }
+    }
+  ],
+  "version" : 3
+}
