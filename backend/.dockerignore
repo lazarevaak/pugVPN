@@ -1,0 +1,11 @@
+.dart_tool
+.dart_frog
+.git
+.gitignore
+.idea
+.vscode
+build
+coverage
+*.log
+README.md
+.env

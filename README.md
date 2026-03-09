@@ -2,6 +2,14 @@
 
 A new Flutter project.
 
+## Android build notes (AmneziaWG)
+
+- The Android AWG integration is connected as a git submodule (`android/amneziawg-android`).
+- After clone, run:
+  - `git submodule update --init --recursive`
+- Build uses Gradle wrapper (`android/gradlew`) and requires a compatible JDK (`17..24`).
+- On macOS/Linux wrapper tries to auto-pick JDK 21/17 if your default Java is too new.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
