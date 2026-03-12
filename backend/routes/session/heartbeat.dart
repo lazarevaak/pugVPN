@@ -1,15 +1,16 @@
 import 'dart:io';
 
 import 'package:dart_frog/dart_frog.dart';
-import 'package:pug_vpn_backend/src/app_store.dart';
-import 'package:pug_vpn_backend/src/auth.dart';
+import 'package:pug_vpn_backend/application/use_cases/devices/push_heartbeat_use_case.dart';
+import 'package:pug_vpn_backend/core/auth.dart';
+import 'package:pug_vpn_backend/core/validators.dart';
 
 Future<Response> onRequest(RequestContext context) async {
   if (context.request.method != HttpMethod.post) {
     return Response(statusCode: HttpStatus.methodNotAllowed);
   }
 
-  final userId = resolveUserId(context);
+  final userId = await resolveUserId(context);
   if (userId == null) {
     return Response.json(
       statusCode: HttpStatus.unauthorized,
@@ -30,15 +31,30 @@ Future<Response> onRequest(RequestContext context) async {
   final isConnected = (payload['is_connected'] as bool?) ?? false;
   final latencyMs = (payload['latency_ms'] as num?)?.toInt() ?? 0;
 
-  if (deviceId.isEmpty || serverId.isEmpty) {
+  final deviceIdError = validateDeviceId(deviceId);
+  if (deviceIdError != null) {
     return Response.json(
       statusCode: HttpStatus.badRequest,
-      body: {'error': 'device_id and server_id are required.'},
+      body: {'error': deviceIdError},
+    );
+  }
+  final serverIdError = validateServerId(serverId);
+  if (serverIdError != null) {
+    return Response.json(
+      statusCode: HttpStatus.badRequest,
+      body: {'error': serverIdError},
+    );
+  }
+  final latencyError = validateLatencyMs(latencyMs);
+  if (latencyError != null) {
+    return Response.json(
+      statusCode: HttpStatus.badRequest,
+      body: {'error': latencyError},
     );
   }
 
-  final store = context.read<AppStore>();
-  store.pushHeartbeat(
+  final pushHeartbeatUseCase = context.read<PushHeartbeatUseCase>();
+  await pushHeartbeatUseCase.execute(
     userId: userId,
     deviceId: deviceId,
     serverId: serverId,

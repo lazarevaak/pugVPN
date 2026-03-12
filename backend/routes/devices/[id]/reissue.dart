@@ -1,13 +1,13 @@
 import 'dart:io';
 
 import 'package:dart_frog/dart_frog.dart';
-import 'package:pug_vpn_backend/application/use_cases/vpn/build_vpn_config_use_case.dart';
+import 'package:pug_vpn_backend/application/use_cases/devices/reissue_device_use_case.dart';
 import 'package:pug_vpn_backend/core/auth.dart';
 import 'package:pug_vpn_backend/core/exceptions/backend_exception.dart';
 import 'package:pug_vpn_backend/core/request_meta.dart';
 import 'package:pug_vpn_backend/core/validators.dart';
 
-Future<Response> onRequest(RequestContext context) async {
+Future<Response> onRequest(RequestContext context, String id) async {
   if (context.request.method != HttpMethod.post) {
     return Response(statusCode: HttpStatus.methodNotAllowed);
   }
@@ -20,6 +20,14 @@ Future<Response> onRequest(RequestContext context) async {
     );
   }
 
+  final deviceIdError = validateDeviceId(id);
+  if (deviceIdError != null) {
+    return Response.json(
+      statusCode: HttpStatus.badRequest,
+      body: {'error': deviceIdError},
+    );
+  }
+
   final payload = await context.request.json();
   if (payload is! Map<String, dynamic>) {
     return Response.json(
@@ -28,62 +36,55 @@ Future<Response> onRequest(RequestContext context) async {
     );
   }
 
-  final serverId = (payload['server_id'] as String?)?.trim() ?? '';
-  final deviceName = (payload['device_name'] as String?)?.trim() ?? '';
-  final devicePublicKey =
-      (payload['device_public_key'] as String?)?.trim() ?? '';
+  final publicKey = (payload['device_public_key'] as String?)?.trim() ?? '';
+  final deviceName = (payload['device_name'] as String?)?.trim();
 
-  final serverIdError = validateServerId(serverId);
-  if (serverIdError != null) {
-    return Response.json(
-      statusCode: HttpStatus.badRequest,
-      body: {'error': serverIdError},
-    );
-  }
-  final deviceNameError = validateDeviceName(deviceName);
-  if (deviceNameError != null) {
-    return Response.json(
-      statusCode: HttpStatus.badRequest,
-      body: {'error': deviceNameError},
-    );
-  }
-  final keyError = validatePublicKey(
-    devicePublicKey,
+  final publicKeyError = validatePublicKey(
+    publicKey,
     field: 'device_public_key',
   );
-  if (keyError != null) {
+  if (publicKeyError != null) {
     return Response.json(
       statusCode: HttpStatus.badRequest,
-      body: {'error': keyError},
+      body: {'error': publicKeyError},
     );
   }
+  if (deviceName != null && deviceName.isNotEmpty) {
+    final deviceNameError = validateDeviceName(deviceName);
+    if (deviceNameError != null) {
+      return Response.json(
+        statusCode: HttpStatus.badRequest,
+        body: {'error': deviceNameError},
+      );
+    }
+  }
 
-  final buildVpnConfigUseCase = context.read<BuildVpnConfigUseCase>();
+  final reissueDeviceUseCase = context.read<ReissueDeviceUseCase>();
   final requestMeta = context.read<RequestMeta>();
 
   try {
-    final result = await buildVpnConfigUseCase.execute(
+    final result = await reissueDeviceUseCase.execute(
       userId: userId,
-      serverId: serverId,
+      deviceId: id,
+      devicePublicKey: publicKey,
       deviceName: deviceName,
-      devicePublicKey: devicePublicKey,
       requestMeta: requestMeta,
     );
     return Response.json(body: result);
-  } on ServerNotFoundException {
+  } on DeviceNotFoundException {
     return Response.json(
       statusCode: HttpStatus.notFound,
-      body: {'error': 'Server not found.'},
+      body: {'error': 'Device not found.'},
+    );
+  } on DeviceRevokedException {
+    return Response.json(
+      statusCode: HttpStatus.conflict,
+      body: {'error': 'Device is revoked and cannot be reissued.'},
     );
   } on DuplicateDeviceKeyException catch (error) {
     return Response.json(
       statusCode: HttpStatus.conflict,
       body: {'error': error.message},
-    );
-  } on TooManyClientsException {
-    return Response.json(
-      statusCode: HttpStatus.conflict,
-      body: {'error': 'No free addresses for this user.'},
     );
   } on ServerPreflightException catch (error) {
     return Response.json(
@@ -93,10 +94,10 @@ Future<Response> onRequest(RequestContext context) async {
         'server_preflight': error.preflight.toJson(),
       },
     );
-  } on PeerProvisionException catch (e) {
+  } on PeerProvisionException catch (error) {
     return Response.json(
       statusCode: HttpStatus.badGateway,
-      body: {'error': 'Peer provisioning failed.', 'details': e.message},
+      body: {'error': 'Peer reissue failed.', 'details': error.message},
     );
   }
 }
