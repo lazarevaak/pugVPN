@@ -60,6 +60,10 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/pug_vpn.png
+    - assets/images/pug_icon.png
+    - assets/images/world_map.png
+    
+    - assets/pug_countries/pug_russia.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
