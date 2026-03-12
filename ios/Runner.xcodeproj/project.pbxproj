@@ -7,10 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-			1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
-			1C8541A0C47E52EB304BE931 /* String+ArrayConversion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44F3A62020A3A0AEDD4FF47D /* String+ArrayConversion.swift */; };
-			A1F0B9CE2D3E4F5600112233 /* WgGoSimulatorShim.c in Sources */ = {isa = PBXBuildFile; fileRef = A1F0B9CF2D3E4F5600112233 /* WgGoSimulatorShim.c */; };
-			331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
+		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
+		1C8541A0C47E52EB304BE931 /* String+ArrayConversion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44F3A62020A3A0AEDD4FF47D /* String+ArrayConversion.swift */; };
+		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		355DED4DB52574DBC76273F7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC16DE79529760E409C8352C /* Foundation.framework */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		6D01502AE853E9F5F3E2C559 /* WireGuardKit in Frameworks */ = {isa = PBXBuildFile; productRef = 92946DB5C19C45417B29156E /* WireGuardKit */; };
@@ -19,6 +18,7 @@
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
+		A1F0B9CE2D3E4F5600112233 /* WgGoSimulatorShim.c in Sources */ = {isa = PBXBuildFile; fileRef = A1F0B9CF2D3E4F5600112233 /* WgGoSimulatorShim.c */; };
 		B5A98A6C6DB18AAD54958E99 /* IosAwgVpnManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F2D97F069F24D34560AE965 /* IosAwgVpnManager.swift */; };
 		B8E86009743DB716F63F58A9 /* NETunnelProviderProtocol+PugVPN.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5CD1F1D49688C1E7252A3EB /* NETunnelProviderProtocol+PugVPN.swift */; };
 		ED638EA7569B880619082F2E /* PugVPNNetworkExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 5C864DF7FBA4721983E46ACC /* PugVPNNetworkExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -88,10 +88,10 @@
 		97C146FB1CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
-			97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-			A4ACDC4F3FF255CEDDA7D2B4 /* TunnelConfiguration+WgQuickConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "TunnelConfiguration+WgQuickConfig.swift"; sourceTree = "<group>"; };
-			A1F0B9CF2D3E4F5600112233 /* WgGoSimulatorShim.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = WgGoSimulatorShim.c; sourceTree = "<group>"; };
-			C5CD1F1D49688C1E7252A3EB /* NETunnelProviderProtocol+PugVPN.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "NETunnelProviderProtocol+PugVPN.swift"; sourceTree = "<group>"; };
+		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A1F0B9CF2D3E4F5600112233 /* WgGoSimulatorShim.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = WgGoSimulatorShim.c; sourceTree = "<group>"; };
+		A4ACDC4F3FF255CEDDA7D2B4 /* TunnelConfiguration+WgQuickConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "TunnelConfiguration+WgQuickConfig.swift"; sourceTree = "<group>"; };
+		C5CD1F1D49688C1E7252A3EB /* NETunnelProviderProtocol+PugVPN.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "NETunnelProviderProtocol+PugVPN.swift"; sourceTree = "<group>"; };
 		DC16DE79529760E409C8352C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
@@ -126,14 +126,14 @@
 		48729D0AB9083B22872B2B39 /* PugVPNNetworkExtension */ = {
 			isa = PBXGroup;
 			children = (
-					4E1540377987750E95F83D1A /* PacketTunnelProvider.swift */,
-					C5CD1F1D49688C1E7252A3EB /* NETunnelProviderProtocol+PugVPN.swift */,
-					A4ACDC4F3FF255CEDDA7D2B4 /* TunnelConfiguration+WgQuickConfig.swift */,
-					44F3A62020A3A0AEDD4FF47D /* String+ArrayConversion.swift */,
-					A1F0B9CF2D3E4F5600112233 /* WgGoSimulatorShim.c */,
-					478741C1BADF53D86C7D49C8 /* Info.plist */,
-					312D1D31BEE4FC943AB6F72E /* PugVPNNetworkExtension.entitlements */,
-				);
+				4E1540377987750E95F83D1A /* PacketTunnelProvider.swift */,
+				C5CD1F1D49688C1E7252A3EB /* NETunnelProviderProtocol+PugVPN.swift */,
+				A4ACDC4F3FF255CEDDA7D2B4 /* TunnelConfiguration+WgQuickConfig.swift */,
+				44F3A62020A3A0AEDD4FF47D /* String+ArrayConversion.swift */,
+				A1F0B9CF2D3E4F5600112233 /* WgGoSimulatorShim.c */,
+				478741C1BADF53D86C7D49C8 /* Info.plist */,
+				312D1D31BEE4FC943AB6F72E /* PugVPNNetworkExtension.entitlements */,
+			);
 			path = PugVPNNetworkExtension;
 			sourceTree = "<group>";
 		};
@@ -418,12 +418,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-					7F5EAC73561A057822A792CC /* PacketTunnelProvider.swift in Sources */,
-					B8E86009743DB716F63F58A9 /* NETunnelProviderProtocol+PugVPN.swift in Sources */,
-					FBC93423DCBD5DB0CC72C34D /* TunnelConfiguration+WgQuickConfig.swift in Sources */,
-					1C8541A0C47E52EB304BE931 /* String+ArrayConversion.swift in Sources */,
-					A1F0B9CE2D3E4F5600112233 /* WgGoSimulatorShim.c in Sources */,
-				);
+				7F5EAC73561A057822A792CC /* PacketTunnelProvider.swift in Sources */,
+				B8E86009743DB716F63F58A9 /* NETunnelProviderProtocol+PugVPN.swift in Sources */,
+				FBC93423DCBD5DB0CC72C34D /* TunnelConfiguration+WgQuickConfig.swift in Sources */,
+				1C8541A0C47E52EB304BE931 /* String+ArrayConversion.swift in Sources */,
+				A1F0B9CE2D3E4F5600112233 /* WgGoSimulatorShim.c in Sources */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
@@ -546,7 +546,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DL4H45878X;
 				GENERATE_INFOPLIST_FILE = YES;
-					MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = pugVpn.com.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -564,7 +564,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DL4H45878X;
 				GENERATE_INFOPLIST_FILE = YES;
-					MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = pugVpn.com.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -580,7 +580,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = DL4H45878X;
 				GENERATE_INFOPLIST_FILE = YES;
-					MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = pugVpn.com.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -605,12 +605,12 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
+				MARKETING_VERSION = 1.0.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-Wl,-u,_darwin_arm_init_thread_exception_port",
 					"-Wl,-u,_darwin_arm_init_mach_exception_handler",
 				);
-				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "pugVpn.com.network-extension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -638,12 +638,12 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
+				MARKETING_VERSION = 1.0.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-Wl,-u,_darwin_arm_init_thread_exception_port",
 					"-Wl,-u,_darwin_arm_init_mach_exception_handler",
 				);
-				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "pugVpn.com.network-extension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -830,12 +830,12 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
+				MARKETING_VERSION = 1.0.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-Wl,-u,_darwin_arm_init_thread_exception_port",
 					"-Wl,-u,_darwin_arm_init_mach_exception_handler",
 				);
-				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "pugVpn.com.network-extension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;

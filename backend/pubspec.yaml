@@ -8,7 +8,8 @@ environment:
 
 dependencies:
   dart_frog: ^1.1.0
+  crypto: ^3.0.6
+  postgres: ^3.5.9
 
 dev_dependencies:
   lints: ^5.0.0
-
