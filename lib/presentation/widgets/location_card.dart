@@ -1,34 +1,40 @@
 import 'package:flutter/material.dart';
 
+import 'package:pug_vpn/presentation/theme/app_theme.dart';
+
 class LocationCard extends StatelessWidget {
   const LocationCard({
     super.key,
     required this.location,
     required this.details,
+    required this.imageAsset,
   });
 
   final String location;
   final String details;
+  final String imageAsset;
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: <Color>[Color(0xFF21344A), Color(0xFF162434)],
+          colors: palette.cardGradient,
         ),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        border: Border.all(color: palette.border),
       ),
       child: Row(
         children: <Widget>[
           ClipRRect(
             borderRadius: BorderRadius.circular(14),
             child: Image.asset(
-              'assets/pug_countries/pug_russia.png',
+              imageAsset,
               width: 56,
               height: 56,
               fit: BoxFit.cover,
@@ -41,23 +47,23 @@ class LocationCard extends StatelessWidget {
               children: <Widget>[
                 Text(
                   location,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: palette.primaryText,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   details,
-                  style: const TextStyle(color: Colors.white60, fontSize: 13),
+                  style: TextStyle(color: palette.secondaryText, fontSize: 13),
                 ),
               ],
             ),
           ),
-          const Icon(
+          Icon(
             Icons.keyboard_arrow_down_rounded,
-            color: Colors.white70,
+            color: palette.secondaryText,
             size: 28,
           ),
         ],

@@ -2,6 +2,7 @@ package com.example.pug_vpn
 
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.VpnService
 import android.os.Handler
 import android.os.Looper
@@ -40,6 +41,7 @@ class AwgVpnManager(
             "connect" -> connect(call, result)
             "disconnect" -> disconnect(result)
             "status" -> status(result)
+            "listInstalledApps" -> listInstalledApps(result)
             else -> result.notImplemented()
         }
     }
@@ -142,6 +144,31 @@ class AwgVpnManager(
                         "is_connected" to (currentState == Tunnel.State.UP),
                     ),
                 )
+            }
+        }
+    }
+
+    private fun listInstalledApps(result: MethodChannel.Result) {
+        executor.execute {
+            try {
+                val packageManager = activity.packageManager
+                val launcherIntent = Intent(Intent.ACTION_MAIN, null).apply {
+                    addCategory(Intent.CATEGORY_LAUNCHER)
+                }
+                val apps = packageManager.queryIntentActivities(launcherIntent, 0)
+                    .mapNotNull { resolveInfo ->
+                        val packageName = resolveInfo.activityInfo?.packageName ?: return@mapNotNull null
+                        if (packageName == activity.packageName) return@mapNotNull null
+                        mapOf(
+                            "packageName" to packageName,
+                            "label" to resolveInfo.loadLabel(packageManager).toString(),
+                        )
+                    }
+                    .distinctBy { it["packageName"] }
+                    .sortedBy { (it["label"] as String).lowercase(Locale.ENGLISH) }
+                postSuccess(result, apps)
+            } catch (error: Exception) {
+                postError(result, "LIST_APPS_ERROR", error.message ?: error.toString())
             }
         }
     }
