@@ -411,22 +411,37 @@ extension BackendStoreDaoDevices on BackendStoreDao {
     required String publicKey,
     String? currentDeviceId,
   }) async {
-    final rows = await session.execute(
-      Sql.named('''
-        SELECT id, user_id
-        FROM devices
-        WHERE server_id = @server_id
-          AND public_key = @public_key
-          AND revoked_at IS NULL
-          AND (@current_device_id IS NULL OR id != @current_device_id)
-        LIMIT 1
-      '''),
-      parameters: <String, Object?>{
-        'server_id': serverId,
-        'public_key': publicKey,
-        'current_device_id': currentDeviceId,
-      },
-    );
+    final rows = currentDeviceId == null
+        ? await session.execute(
+            Sql.named('''
+              SELECT id, user_id
+              FROM devices
+              WHERE server_id = @server_id
+                AND public_key = @public_key
+                AND revoked_at IS NULL
+              LIMIT 1
+            '''),
+            parameters: <String, Object?>{
+              'server_id': serverId,
+              'public_key': publicKey,
+            },
+          )
+        : await session.execute(
+            Sql.named('''
+              SELECT id, user_id
+              FROM devices
+              WHERE server_id = @server_id
+                AND public_key = @public_key
+                AND revoked_at IS NULL
+                AND id != @current_device_id
+              LIMIT 1
+            '''),
+            parameters: <String, Object?>{
+              'server_id': serverId,
+              'public_key': publicKey,
+              'current_device_id': currentDeviceId,
+            },
+          );
     if (rows.isEmpty) return;
 
     final row = rows.first.toColumnMap();
