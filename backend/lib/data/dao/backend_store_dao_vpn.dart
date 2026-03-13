@@ -183,7 +183,7 @@ extension BackendStoreDaoVpn on BackendStoreDao {
       ..writeln('[Peer]')
       ..writeln('PublicKey = ${server.publicKey}')
       ..writeln('Endpoint = ${server.endpoint}')
-      ..writeln('AllowedIPs = 0.0.0.0/0')
+      ..writeln('AllowedIPs = 0.0.0.0/0, ::/0')
       ..writeln('PersistentKeepalive = 25');
 
     return '${interface.toString().trimRight()}\n\n${peer.toString().trimRight()}\n';

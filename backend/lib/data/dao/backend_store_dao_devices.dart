@@ -313,13 +313,6 @@ extension BackendStoreDaoDevices on BackendStoreDao {
       parameters: <String, Object?>{'server_id': serverId},
     );
 
-    await _ensurePublicKeyAvailable(
-      tx,
-      userId: userId,
-      serverId: serverId,
-      publicKey: publicKey.trim(),
-    );
-
     final existingRows = await tx.execute(
       Sql.named('''
         SELECT *
@@ -338,8 +331,35 @@ extension BackendStoreDaoDevices on BackendStoreDao {
     );
 
     if (existingRows.isNotEmpty) {
-      return _deviceFromRow(existingRows.first.toColumnMap());
+      final existing = _deviceFromRow(existingRows.first.toColumnMap());
+      final normalizedName = deviceName.trim();
+      if (existing.name == normalizedName) {
+        return existing;
+      }
+
+      final updatedRows = await tx.execute(
+        Sql.named('''
+          UPDATE devices
+          SET
+            name = @name,
+            updated_at = NOW()
+          WHERE id = @device_id
+          RETURNING *
+        '''),
+        parameters: <String, Object?>{
+          'device_id': existing.id,
+          'name': normalizedName,
+        },
+      );
+      return _deviceFromRow(updatedRows.first.toColumnMap());
     }
+
+    await _ensurePublicKeyAvailable(
+      tx,
+      userId: userId,
+      serverId: serverId,
+      publicKey: publicKey.trim(),
+    );
 
     final countRows = await tx.execute(
       Sql.named('''

@@ -61,5 +61,15 @@ Future<Response> onRequest(RequestContext context) async {
       statusCode: HttpStatus.unauthorized,
       body: {'error': 'Invalid credentials.'},
     );
+  } on StorageException catch (error) {
+    return Response.json(
+      statusCode: HttpStatus.internalServerError,
+      body: {'error': error.toString()},
+    );
+  } catch (error) {
+    return Response.json(
+      statusCode: HttpStatus.internalServerError,
+      body: {'error': error.toString()},
+    );
   }
 }

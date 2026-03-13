@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:http/http.dart' as http;
 
@@ -7,6 +8,8 @@ import 'package:pug_vpn/data/dto/vpn_config_result_dto.dart';
 import 'package:pug_vpn/data/dto/vpn_server_dto.dart';
 
 class BackendApiDao {
+  static const Duration _requestTimeout = Duration(seconds: 20);
+
   BackendApiDao({required String baseUrl})
     : _baseUri = Uri.parse(baseUrl),
       _http = http.Client();
@@ -86,29 +89,66 @@ class BackendApiDao {
     };
 
     final response = switch (method) {
-      'GET' => await _http.get(uri, headers: headers),
-      'POST' => await _http.post(
-        uri,
-        headers: headers,
-        body: body == null ? null : jsonEncode(body),
+      'GET' => await _runRequest(
+        () => _http.get(uri, headers: headers).timeout(_requestTimeout),
+      ),
+      'POST' => await _runRequest(
+        () => _http
+            .post(
+              uri,
+              headers: headers,
+              body: body == null ? null : jsonEncode(body),
+            )
+            .timeout(_requestTimeout),
       ),
       _ => throw BackendException('Unsupported method: $method'),
     };
 
-    final decoded = _decodeJson(response.body);
     if (response.statusCode < 200 || response.statusCode >= 300) {
+      final decoded = _tryDecodeJson(response.body);
       final message =
-          decoded['error'] as String? ?? 'HTTP ${response.statusCode}';
+          decoded?['error'] as String? ??
+          response.body.trim().takeIf((String value) => value.isNotEmpty) ??
+          'HTTP ${response.statusCode}';
       throw BackendException(message);
+    }
+
+    final decoded = _tryDecodeJson(response.body);
+    if (decoded == null) {
+      throw BackendException(
+        'Backend вернул некорректный JSON: ${response.body.trim()}',
+      );
     }
     return decoded;
   }
 
-  Map<String, dynamic> _decodeJson(String raw) {
-    final decoded = jsonDecode(raw);
-    if (decoded is! Map<String, dynamic>) {
-      throw const BackendException('Backend вернул некорректный JSON.');
+  Future<http.Response> _runRequest(
+    Future<http.Response> Function() action,
+  ) async {
+    try {
+      return await action();
+    } on TimeoutException {
+      throw const BackendException(
+        'Backend response timed out while preparing VPN connection.',
+      );
     }
-    return decoded;
+  }
+
+  Map<String, dynamic>? _tryDecodeJson(String raw) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      return null;
+    } on FormatException {
+      return null;
+    }
+  }
+}
+
+extension on String {
+  String? takeIf(bool Function(String value) predicate) {
+    return predicate(this) ? this : null;
   }
 }
