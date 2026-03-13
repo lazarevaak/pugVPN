@@ -3,8 +3,10 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:pug_vpn/presentation/localization/app_strings.dart';
 import 'package:pug_vpn/presentation/pages/home_page.dart';
 import 'package:pug_vpn/presentation/pages/locations_page.dart';
+import 'package:pug_vpn/presentation/pages/premium_page.dart';
 import 'package:pug_vpn/presentation/pages/settings_page.dart';
 import 'package:pug_vpn/presentation/theme/app_theme.dart';
 import 'package:pug_vpn/presentation/viewmodels/tab_viewmodel.dart';
@@ -15,6 +17,8 @@ class RootPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<TabViewModel>();
+    final palette = AppPalette.of(context);
+    final strings = AppStrings.of(context);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -23,11 +27,11 @@ class RootPage extends StatelessWidget {
           Positioned.fill(
             child: IndexedStack(
               index: vm.index,
-              children: const <Widget>[
-                HomePage(),
-                LocationsPage(),
-                SettingsPage(),
-                _TabPlaceholder(title: 'Premium'),
+              children: <Widget>[
+                const HomePage(),
+                const LocationsPage(),
+                const SettingsPage(),
+                const PremiumPage(),
               ],
             ),
           ),
@@ -58,11 +62,12 @@ class _GlassTabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
-    const items = <({IconData icon, String label})>[
-      (icon: Icons.home_rounded, label: 'Home'),
-      (icon: Icons.location_on_rounded, label: 'Locations'),
-      (icon: Icons.settings_rounded, label: 'Settings'),
-      (icon: Icons.workspace_premium_rounded, label: 'Premium'),
+    final strings = AppStrings.of(context);
+    final items = <({IconData icon, String label})>[
+      (icon: Icons.home_rounded, label: strings.homeTab),
+      (icon: Icons.location_on_rounded, label: strings.locationsTab),
+      (icon: Icons.settings_rounded, label: strings.settingsTab),
+      (icon: Icons.workspace_premium_rounded, label: strings.premiumTab),
     ];
 
     return DecoratedBox(
@@ -204,37 +209,6 @@ class _NavItem extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TabPlaceholder extends StatelessWidget {
-  const _TabPlaceholder({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = AppPalette.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: RadialGradient(
-          center: Alignment(0, -0.4),
-          radius: 1.2,
-          colors: palette.backgroundGradient,
-          stops: <double>[0.0, 0.6, 1.0],
-        ),
-      ),
-      child: Center(
-        child: Text(
-          title,
-          style: TextStyle(
-            color: palette.secondaryText,
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-          ),
         ),
       ),
     );

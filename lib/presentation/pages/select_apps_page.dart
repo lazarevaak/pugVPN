@@ -3,9 +3,13 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:pug_vpn/core/providers.dart';
 import 'package:pug_vpn/domain/entities/device_app.dart';
+import 'package:pug_vpn/domain/repositories/native_vpn_repository.dart';
+import 'package:pug_vpn/presentation/localization/app_strings.dart';
 import 'package:pug_vpn/presentation/theme/app_theme.dart';
 import 'package:pug_vpn/presentation/viewmodels/app_selection_viewmodel.dart';
+import 'package:pug_vpn/presentation/viewmodels/tab_viewmodel.dart';
 
 class SelectAppsPage extends StatefulWidget {
   const SelectAppsPage({super.key});
@@ -15,12 +19,14 @@ class SelectAppsPage extends StatefulWidget {
 }
 
 class _SelectAppsPageState extends State<SelectAppsPage> {
+  late final NativeVpnRepository _nativeVpn;
   final Set<String> _draftSelection = <String>{};
   bool _initializedDraft = false;
 
   @override
   void initState() {
     super.initState();
+    _nativeVpn = createNativeVpnRepository();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AppSelectionViewModel>().ensureLoaded();
     });
@@ -30,6 +36,7 @@ class _SelectAppsPageState extends State<SelectAppsPage> {
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
     final vm = context.watch<AppSelectionViewModel>();
+    final strings = AppStrings.of(context);
 
     if (vm.isLoaded && !_initializedDraft) {
       _draftSelection
@@ -60,16 +67,21 @@ class _SelectAppsPageState extends State<SelectAppsPage> {
                   const SizedBox(height: 18),
                   Row(
                     children: <Widget>[
-                      IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: Icon(
-                          Icons.chevron_left_rounded,
-                          color: palette.secondaryText,
-                          size: 28,
+                      InkWell(
+                        onTap: () => Navigator.of(context).pop(),
+                        borderRadius: BorderRadius.circular(16),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: Icon(
+                            Icons.chevron_left_rounded,
+                            color: palette.secondaryText,
+                            size: 28,
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
-                        'Select Apps',
+                        strings.selectAppsTitle,
                         style: TextStyle(
                           color: palette.primaryText,
                           fontSize: 28,
@@ -79,21 +91,23 @@ class _SelectAppsPageState extends State<SelectAppsPage> {
                     ],
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    padding: const EdgeInsets.only(left: 4, top: 6, right: 4),
                     child: Text(
-                      'Only the selected apps will use the VPN. By default, all installed apps are selected.',
+                      strings.onlySelectedApps,
                       style: TextStyle(
                         color: palette.secondaryText,
                         fontSize: 14,
                         height: 1.45,
                       ),
+                      textAlign: TextAlign.left,
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 18),
                   _SelectionActions(
                     palette: palette,
                     selectedCount: _draftSelection.length,
                     totalCount: vm.apps.length,
+                    strings: strings,
                     onSelectAll: () {
                       setState(() {
                         _draftSelection
@@ -118,7 +132,7 @@ class _SelectAppsPageState extends State<SelectAppsPage> {
                         if (vm.apps.isEmpty) {
                           return Center(
                             child: Text(
-                              vm.errorMessage ?? 'No launchable apps found on this device.',
+                              vm.errorMessage ?? strings.noAppsFound,
                               style: TextStyle(
                                 color: palette.secondaryText,
                                 fontSize: 14,
@@ -129,7 +143,7 @@ class _SelectAppsPageState extends State<SelectAppsPage> {
                         }
 
                         return ListView.separated(
-                          padding: const EdgeInsets.only(bottom: 20),
+                          padding: const EdgeInsets.only(bottom: 12),
                           itemCount: vm.apps.length,
                           separatorBuilder: (_, __) => const SizedBox(height: 10),
                           itemBuilder: (BuildContext context, int index) {
@@ -153,18 +167,15 @@ class _SelectAppsPageState extends State<SelectAppsPage> {
                       },
                     ),
                   ),
+                  const SizedBox(height: 12),
                   _SaveButton(
                     palette: palette,
+                    label: strings.save,
                     onTap: vm.apps.isEmpty
                         ? null
-                        : () {
-                            context.read<AppSelectionViewModel>().saveSelection(
-                              _draftSelection,
-                            );
-                            Navigator.of(context).pop();
-                          },
+                        : () => _saveSelection(context),
                   ),
-                  const SizedBox(height: 112),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
@@ -173,6 +184,36 @@ class _SelectAppsPageState extends State<SelectAppsPage> {
       ),
     );
   }
+
+  Future<void> _saveSelection(BuildContext context) async {
+    final selectionVm = context.read<AppSelectionViewModel>();
+    final tabVm = context.read<TabViewModel>();
+    final previousSelection = selectionVm.selectedPackages;
+    final hasChanged = !_sameSelection(previousSelection, _draftSelection);
+
+    await selectionVm.saveSelection(_draftSelection);
+
+    if (hasChanged) {
+      if (tabVm.isConnected) {
+        await _nativeVpn.disconnect();
+      }
+      if (!mounted) return;
+      tabVm.setConnection(
+        isConnected: false,
+        location: 'RU',
+        details: 'Russia',
+      );
+      tabVm.changeTab(0);
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).pop();
+  }
+
+  bool _sameSelection(Set<String> left, Set<String> right) {
+    if (left.length != right.length) return false;
+    return left.containsAll(right);
+  }
 }
 
 class _SelectionActions extends StatelessWidget {
@@ -180,6 +221,7 @@ class _SelectionActions extends StatelessWidget {
     required this.palette,
     required this.selectedCount,
     required this.totalCount,
+    required this.strings,
     required this.onSelectAll,
     required this.onReset,
   });
@@ -187,16 +229,18 @@ class _SelectionActions extends StatelessWidget {
   final AppPalette palette;
   final int selectedCount;
   final int totalCount;
+  final AppStrings strings;
   final VoidCallback onSelectAll;
   final VoidCallback onReset;
 
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
         Expanded(
           child: Text(
-            'Selected $selectedCount of $totalCount',
+            '${strings.selected} $selectedCount / $totalCount',
             style: TextStyle(
               color: palette.secondaryText,
               fontSize: 13,
@@ -204,16 +248,21 @@ class _SelectionActions extends StatelessWidget {
             ),
           ),
         ),
-        _ActionChip(
-          label: 'Select all',
-          palette: palette,
-          onTap: onSelectAll,
-        ),
-        const SizedBox(width: 8),
-        _ActionChip(
-          label: 'Reset',
-          palette: palette,
-          onTap: onReset,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            _ActionChip(
+              label: strings.selectAll,
+              palette: palette,
+              onTap: onSelectAll,
+            ),
+            const SizedBox(width: 8),
+            _ActionChip(
+              label: strings.reset,
+              palette: palette,
+              onTap: onReset,
+            ),
+          ],
         ),
       ],
     );
@@ -272,39 +321,28 @@ class _SelectAppTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(22),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: palette.cardGradient,
+              colors: selected
+                  ? <Color>[
+                      palette.cardGradient.first.withValues(alpha: 0.98),
+                      palette.cardGradient.last,
+                    ]
+                  : palette.cardGradient,
             ),
             border: Border.all(color: palette.border),
           ),
           child: Row(
             children: <Widget>[
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(11),
-                  color: palette.softFill,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  app.label.isEmpty ? '?' : app.label.substring(0, 1).toUpperCase(),
-                  style: TextStyle(
-                    color: palette.primaryText,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
+              _AppIcon(app: app, palette: palette),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -314,7 +352,7 @@ class _SelectAppTile extends StatelessWidget {
                       app.label,
                       style: TextStyle(
                         color: palette.primaryText,
-                        fontSize: 16,
+                        fontSize: 17,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -338,6 +376,9 @@ class _SelectAppTile extends StatelessWidget {
                 activeColor: const Color(0xFF7B93D8),
                 checkColor: Colors.white,
                 side: BorderSide(color: palette.secondaryText),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
             ],
           ),
@@ -347,13 +388,75 @@ class _SelectAppTile extends StatelessWidget {
   }
 }
 
+class _AppIcon extends StatelessWidget {
+  const _AppIcon({
+    required this.app,
+    required this.palette,
+  });
+
+  final DeviceApp app;
+  final AppPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: palette.softFill,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: app.iconBytes != null
+          ? Image.memory(
+              app.iconBytes!,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _AppIconFallback(
+                label: app.label,
+                palette: palette,
+              ),
+            )
+          : _AppIconFallback(
+              label: app.label,
+              palette: palette,
+            ),
+    );
+  }
+}
+
+class _AppIconFallback extends StatelessWidget {
+  const _AppIconFallback({
+    required this.label,
+    required this.palette,
+  });
+
+  final String label;
+  final AppPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        label.isEmpty ? '?' : label.substring(0, 1).toUpperCase(),
+        style: TextStyle(
+          color: palette.primaryText,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
 class _SaveButton extends StatelessWidget {
   const _SaveButton({
     required this.palette,
+    required this.label,
     required this.onTap,
   });
 
   final AppPalette palette;
+  final String label;
   final VoidCallback? onTap;
 
   @override
@@ -378,7 +481,7 @@ class _SaveButton extends StatelessWidget {
             onTap: onTap,
             child: Center(
               child: Text(
-                'Save',
+                label,
                 style: TextStyle(
                   color: palette.isDark ? Colors.white : const Color(0xFFF8FBFF),
                   fontSize: 18,
