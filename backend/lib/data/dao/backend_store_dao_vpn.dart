@@ -91,11 +91,13 @@ extension BackendStoreDaoVpn on BackendStoreDao {
     final availableIpSlots = await _remainingIpSlots(connection, server.id);
     final hasFreeIps = availableIpSlots > 0;
     final mode = _provisioningMode;
-    final tcpReachable = await _isEndpointReachable(server.endpoint);
+    final endpointTcpReachable = await _isEndpointReachable(server.endpoint);
 
     var interfaceUp = mode == 'off' ? null : false;
     var provisioningReady = mode == 'off' ? null : false;
-    var details = tcpReachable ? 'endpoint reachable' : 'endpoint unreachable';
+    var details = endpointTcpReachable
+        ? 'endpoint tcp probe reachable'
+        : 'endpoint tcp probe unreachable';
 
     if (mode != 'off') {
       final result = _runProvisioningScript(
@@ -111,10 +113,18 @@ extension BackendStoreDaoVpn on BackendStoreDao {
           : stdout.isNotEmpty
           ? stdout
           : details;
+      if (!endpointTcpReachable) {
+        details =
+            '$details; endpoint tcp probe failed, but provisioning host is reachable';
+      }
     }
 
+    final serverReachable = mode == 'off'
+        ? endpointTcpReachable
+        : (provisioningReady == true || endpointTcpReachable);
+
     final preflight = ServerPreflight(
-      serverReachable: tcpReachable,
+      serverReachable: serverReachable,
       interfaceUp: interfaceUp,
       provisioningReady: provisioningReady,
       hasFreeIps: hasFreeIps,
@@ -124,7 +134,7 @@ extension BackendStoreDaoVpn on BackendStoreDao {
       details: details,
     );
 
-    if (!tcpReachable) {
+    if (mode == 'off' && !endpointTcpReachable) {
       throw ServerPreflightException(
         message: 'VPN endpoint is not reachable from backend.',
         preflight: preflight,
@@ -268,18 +278,13 @@ if ! ip link show dev "\$INTERFACE" >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! ip link show dev "\$INTERFACE" | grep -q "state UP"; then
+if ! ip link show dev "\$INTERFACE" | grep -q "<.*UP.*>"; then
   echo "Interface \$INTERFACE is not UP" >&2
   exit 1
 fi
 
 if [ ! -w "\$CONFIG_PATH" ]; then
   echo "Config file not writable: \$CONFIG_PATH" >&2
-  exit 1
-fi
-
-if ! systemctl is-active --quiet "\$SERVICE"; then
-  echo "Service \$SERVICE is not active" >&2
   exit 1
 fi
 
@@ -426,6 +431,10 @@ $restartCommand
     final port = _envInt('PUGVPN_PROVISION_SSH_PORT', 22);
     final keyPath =
         (Platform.environment['PUGVPN_PROVISION_SSH_KEY_PATH'] ?? '').trim();
+    final knownHostsPath =
+        (Platform.environment['PUGVPN_PROVISION_SSH_KNOWN_HOSTS_FILE'] ??
+                '/tmp/pugvpn_known_hosts')
+            .trim();
 
     final args = <String>[
       '-o',
@@ -434,6 +443,8 @@ $restartCommand
       'ConnectTimeout=10',
       '-o',
       'StrictHostKeyChecking=accept-new',
+      '-o',
+      'UserKnownHostsFile=$knownHostsPath',
       if (port != 22) ...['-p', '$port'],
       if (keyPath.isNotEmpty) ...['-i', keyPath],
       '$user@$host',
