@@ -3,8 +3,12 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:pug_vpn/core/providers.dart';
+import 'package:pug_vpn/domain/repositories/native_vpn_repository.dart';
+import 'package:pug_vpn/presentation/localization/app_strings.dart';
 import 'package:pug_vpn/presentation/pages/select_apps_page.dart';
 import 'package:pug_vpn/presentation/theme/app_theme.dart';
+import 'package:pug_vpn/presentation/viewmodels/language_viewmodel.dart';
 import 'package:pug_vpn/presentation/viewmodels/tab_viewmodel.dart';
 import 'package:pug_vpn/presentation/viewmodels/theme_viewmodel.dart';
 
@@ -16,13 +20,22 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  late final NativeVpnRepository _nativeVpn;
   bool _killSwitch = true;
   bool _autoConnect = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _nativeVpn = createNativeVpnRepository();
+  }
 
   @override
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
     final themeVm = context.watch<ThemeViewModel>();
+    final languageVm = context.watch<LanguageViewModel>();
+    final strings = AppStrings.of(context);
 
     return Stack(
       children: <Widget>[
@@ -54,7 +67,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Settings',
+                      strings.settingsTitle,
                       style: TextStyle(
                         color: palette.primaryText,
                         fontSize: 28,
@@ -63,34 +76,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                _SettingsSwitchTile(
-                  icon: Icons.shield_rounded,
-                  title: 'Kill Switch',
-                  value: _killSwitch,
-                  palette: palette,
-                  onChanged: (bool value) {
-                    setState(() {
-                      _killSwitch = value;
-                    });
-                  },
-                ),
-                const SizedBox(height: 10),
-                _SettingsSwitchTile(
-                  icon: Icons.lock_rounded,
-                  title: 'Auto Connect',
-                  value: _autoConnect,
-                  palette: palette,
-                  onChanged: (bool value) {
-                    setState(() {
-                      _autoConnect = value;
-                    });
-                  },
-                ),
                 const SizedBox(height: 10),
                 _SettingsSwitchTile(
                   icon: Icons.dark_mode_rounded,
-                  title: 'Dark Mode',
+                  title: strings.darkMode,
                   value: themeVm.isDarkMode,
                   palette: palette,
                   activeColor: const Color(0xFF8CABFF),
@@ -101,21 +90,22 @@ class _SettingsPageState extends State<SettingsPage> {
                 const SizedBox(height: 18),
                 _SettingsActionTile(
                   icon: Icons.person_rounded,
-                  title: 'Account',
+                  title: strings.account,
                   subtitle: 'demo@pugvpn.app',
                   palette: palette,
                 ),
                 const SizedBox(height: 10),
                 _SettingsActionTile(
                   icon: Icons.language_rounded,
-                  title: 'Language',
-                  subtitle: 'English',
+                  title: strings.language,
+                  subtitle: languageVm.displayName,
                   palette: palette,
+                  onTap: () => _showLanguagePicker(context),
                 ),
                 const SizedBox(height: 10),
                 _SettingsActionTile(
                   icon: Icons.apps_rounded,
-                  title: 'Select Apps',
+                  title: strings.selectApps,
                   palette: palette,
                   onTap: () {
                     Navigator.of(context).push(
@@ -127,15 +117,24 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 10),
                 _SettingsActionTile(
-                  icon: Icons.workspace_premium_rounded,
-                  title: 'Subscription',
+                  icon: Icons.share_rounded,
+                  title: strings.shareApp,
                   palette: palette,
+                  onTap: () => _shareApp(context),
+                ),
+                const SizedBox(height: 10),
+                _SettingsActionTile(
+                  icon: Icons.workspace_premium_rounded,
+                  title: strings.subscription,
+                  palette: palette,
+                  onTap: () => context.read<TabViewModel>().changeTab(3),
                 ),
                 const SizedBox(height: 10),
                 _SettingsActionTile(
                   icon: Icons.info_rounded,
-                  title: 'About',
+                  title: strings.about,
                   palette: palette,
+                  onTap: () => _showAboutDialog(context),
                 ),
                 const Spacer(),
                 const SizedBox(height: 112),
@@ -144,6 +143,170 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Future<void> _showLanguagePicker(BuildContext context) async {
+    final palette = AppPalette.of(context);
+    final languageVm = context.read<LanguageViewModel>();
+    final strings = AppStrings.fromLanguage(languageVm.isRussian);
+
+    await showDialog<void>(
+      context: context,
+      useRootNavigator: true,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            decoration: BoxDecoration(
+              color: palette.cardGradient.last,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: palette.border),
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.22),
+                  blurRadius: 28,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    strings.languageChoice,
+                    style: TextStyle(
+                      color: palette.primaryText,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _LanguageTile(
+                  label: strings.english,
+                  selected: languageVm.language == AppLanguage.english,
+                  onTap: () {
+                    languageVm.setLanguage(AppLanguage.english);
+                    Navigator.of(dialogContext).pop();
+                  },
+                ),
+                const SizedBox(height: 8),
+                _LanguageTile(
+                  label: strings.russian,
+                  selected: languageVm.language == AppLanguage.russian,
+                  onTap: () {
+                    languageVm.setLanguage(AppLanguage.russian);
+                    Navigator.of(dialogContext).pop();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _shareApp(BuildContext context) async {
+    const shareText =
+        'PugVPN\nSecure. Fast. Private.\nDownload and try the app.';
+    await _nativeVpn.shareText(shareText);
+  }
+
+  Future<void> _showAboutDialog(BuildContext context) async {
+    final palette = AppPalette.of(context);
+    final strings = AppStrings.fromLanguage(
+      context.read<LanguageViewModel>().isRussian,
+    );
+
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: palette.cardGradient.last,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: Text(
+            strings.aboutTitle,
+            style: TextStyle(
+              color: palette.primaryText,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          content: Text(
+            strings.aboutBody,
+            style: TextStyle(
+              color: palette.secondaryText,
+              fontSize: 14,
+              height: 1.45,
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(strings.close),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _LanguageTile extends StatelessWidget {
+  const _LanguageTile({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          color: selected ? palette.softFill : Colors.transparent,
+          border: Border.all(color: palette.border),
+        ),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: palette.primaryText,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            if (selected)
+              const Icon(
+                Icons.check_rounded,
+                color: Color(0xFF56F2C4),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -219,45 +382,48 @@ class _SettingsActionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return _SettingsCard(
       palette: palette,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Row(
-          children: <Widget>[
-            _LeadingIcon(icon: icon, palette: palette),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: palette.primaryText,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (subtitle != null) ...<Widget>[
-                    const SizedBox(height: 2),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(18),
+          child: Row(
+            children: <Widget>[
+              _LeadingIcon(icon: icon, palette: palette),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
                     Text(
-                      subtitle!,
+                      title,
                       style: TextStyle(
-                        color: palette.secondaryText,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                        color: palette.primaryText,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
+                    if (subtitle != null) ...<Widget>[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle!,
+                        style: TextStyle(
+                          color: palette.secondaryText,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: palette.secondaryText,
-              size: 24,
-            ),
-          ],
+              Icon(
+                Icons.chevron_right_rounded,
+                color: palette.secondaryText,
+                size: 24,
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -147,4 +147,20 @@ class NativeVpnDao {
       throw BackendException(error.message ?? error.code);
     }
   }
+
+  Future<bool> shareText(String text) async {
+    try {
+      final result = await _channel.invokeMethod<bool>(
+        'shareText',
+        <String, dynamic>{'text': text},
+      );
+      return result ?? false;
+    } on MissingPluginException {
+      throw const BackendException(
+        'Native share bridge не найден на этой платформе.',
+      );
+    } on PlatformException catch (error) {
+      throw BackendException(error.message ?? error.code);
+    }
+  }
 }

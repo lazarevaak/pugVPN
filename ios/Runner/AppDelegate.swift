@@ -64,8 +64,64 @@ import UIKit
         tunnelName: tunnelName,
         result: result
       )
+    case "shareText":
+      guard
+        let args = call.arguments as? [String: Any],
+        let text = args["text"] as? String
+      else {
+        result(
+          FlutterError(
+            code: "INVALID_ARGS",
+            message: "text is required.",
+            details: nil
+          ))
+        return
+      }
+
+      presentTextShareSheet(
+        text: text,
+        result: result
+      )
     default:
       result(FlutterMethodNotImplemented)
+    }
+  }
+
+  private func presentTextShareSheet(
+    text: String,
+    result: @escaping FlutterResult
+  ) {
+    DispatchQueue.main.async {
+      guard let controller = self.window?.rootViewController else {
+        result(
+          FlutterError(
+            code: "NO_UI",
+            message: "Unable to open iOS share sheet.",
+            details: nil
+          ))
+        return
+      }
+
+      let activityVC = UIActivityViewController(
+        activityItems: [text],
+        applicationActivities: nil
+      )
+
+      if let popover = activityVC.popoverPresentationController {
+        popover.sourceView = controller.view
+        popover.sourceRect = CGRect(
+          x: controller.view.bounds.midX,
+          y: controller.view.bounds.midY,
+          width: 0,
+          height: 0
+        )
+        popover.permittedArrowDirections = []
+      }
+
+      activityVC.completionWithItemsHandler = { _, completed, _, _ in
+        result(completed)
+      }
+      controller.present(activityVC, animated: true)
     }
   }
 

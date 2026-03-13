@@ -11,6 +11,7 @@ import 'package:pug_vpn/domain/entities/device_key_pair.dart';
 import 'package:pug_vpn/domain/repositories/backend_repository.dart';
 import 'package:pug_vpn/domain/repositories/native_vpn_repository.dart';
 import 'package:pug_vpn/presentation/theme/app_theme.dart';
+import 'package:pug_vpn/presentation/localization/app_strings.dart';
 import 'package:pug_vpn/presentation/viewmodels/app_selection_viewmodel.dart';
 import 'package:pug_vpn/presentation/viewmodels/tab_viewmodel.dart';
 import 'package:pug_vpn/presentation/widgets/location_card.dart';
@@ -75,7 +76,6 @@ class _HomePageState extends State<HomePage>
     setState(() {
       _isConnecting = true;
       _errorMessage = null;
-      _statusLabel = 'Connecting...';
     });
     _controller.repeat(reverse: true);
 
@@ -176,7 +176,6 @@ class _HomePageState extends State<HomePage>
         _location = server.location;
         _locationDetails = server.name;
         _isConnected = true;
-        _statusLabel = 'Connected';
         _errorMessage = null;
       });
     } catch (error) {
@@ -184,7 +183,6 @@ class _HomePageState extends State<HomePage>
       if (!mounted) return;
       setState(() {
         _isConnected = false;
-        _statusLabel = 'Disconnected';
         _errorMessage = error.toString();
       });
     } finally {
@@ -232,10 +230,15 @@ class _HomePageState extends State<HomePage>
         setState(() {
           _isConnected = false;
           _isConnecting = false;
-          _statusLabel = 'Disconnected';
         });
       }
     }
+  }
+
+  Future<void> _shareApp() async {
+    const shareText =
+        'PugVPN\nSecure. Fast. Private.\nDownload and try the app.';
+    await _nativeVpn.shareText(shareText);
   }
 
   Future<void> _ensureTunnelStoppedBeforeConnect() async {
@@ -458,11 +461,23 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
+    final strings = AppStrings.of(context);
     final buttonLabel = _isConnecting
-        ? 'CONNECTING...'
+        ? strings.connecting
         : _isConnected
-        ? 'DISCONNECT'
-        : 'CONNECT';
+        ? strings.disconnect
+        : strings.connect;
+    final displayStatusLabel = switch (_statusLabel) {
+      'Connected' => strings.connected,
+      'Connecting...' => strings.connecting,
+      'Disconnected' => strings.disconnected,
+      'Preparing device...' => strings.connecting,
+      'Authorizing...' => strings.connecting,
+      'Loading servers...' => strings.connecting,
+      'Preparing VPN config...' => strings.connecting,
+      'Starting tunnel...' => strings.connecting,
+      _ => _statusLabel,
+    };
 
     return Stack(
       children: <Widget>[
@@ -502,7 +517,7 @@ class _HomePageState extends State<HomePage>
                           Image.asset('assets/images/pug_icon.png', height: 38),
                           const SizedBox(width: 12),
                           Text(
-                            'PugVPN',
+                            strings.appName,
                             style: TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.w600,
@@ -510,6 +525,16 @@ class _HomePageState extends State<HomePage>
                             ),
                           ),
                           const Spacer(),
+                          IconButton(
+                            onPressed: _shareApp,
+                            icon: Icon(
+                              Icons.share_rounded,
+                              color: palette.secondaryText,
+                              size: 26,
+                            ),
+                            tooltip: strings.shareApp,
+                            splashRadius: 22,
+                          ),
                           IconButton(
                             onPressed: () =>
                                 context.read<TabViewModel>().changeTab(2),
@@ -586,13 +611,13 @@ class _HomePageState extends State<HomePage>
                             end: Alignment.bottomRight,
                             colors: palette.isDark
                                 ? const <Color>[Color(0xFF2C3F55), Color(0xFF1A2636)]
-                                : const <Color>[Color(0xFF4A668D), Color(0xFF2D4260)],
+                                : const <Color>[Color(0xFF7DE0BE), Color(0xFF32BDA0)],
                           ),
                           boxShadow: <BoxShadow>[
                             BoxShadow(
                               color: palette.isDark
                                   ? Colors.black.withValues(alpha: 0.8)
-                                  : const Color(0xFF9DAFCC).withValues(alpha: 0.55),
+                                  : const Color(0xFF7CD9BF).withValues(alpha: 0.42),
                               blurRadius: 34,
                               offset: const Offset(0, 25),
                             ),
@@ -633,15 +658,15 @@ class _HomePageState extends State<HomePage>
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Tap to secure your connection',
+                      strings.tapToSecure,
                       style: TextStyle(color: palette.tertiaryText, fontSize: 14),
                     ),
                     const SizedBox(height: 10),
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       child: Text(
-                        _statusLabel,
-                        key: ValueKey<String>(_statusLabel),
+                        displayStatusLabel,
+                        key: ValueKey<String>(displayStatusLabel),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 18,

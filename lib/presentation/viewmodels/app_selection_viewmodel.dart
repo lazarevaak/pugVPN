@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:pug_vpn/core/providers.dart';
 import 'package:pug_vpn/domain/entities/device_app.dart';
 import 'package:pug_vpn/domain/repositories/native_vpn_repository.dart';
 
 class AppSelectionViewModel extends ChangeNotifier {
+  static const String _selectionKey = 'selected_app_packages';
+
   AppSelectionViewModel({NativeVpnRepository? repository})
       : _repository = repository ?? createNativeVpnRepository();
 
@@ -35,7 +38,16 @@ class AppSelectionViewModel extends ChangeNotifier {
     try {
       final apps = await _repository.listInstalledApps();
       _apps = apps;
-      _selectedPackages = apps.map((DeviceApp app) => app.packageName).toSet();
+      final prefs = await SharedPreferences.getInstance();
+      final persisted = prefs.getStringList(_selectionKey) ?? <String>[];
+      final availablePackages =
+          apps.map((DeviceApp app) => app.packageName).toSet();
+      final restoredSelection = persisted
+          .where((String packageName) => availablePackages.contains(packageName))
+          .toSet();
+      _selectedPackages = restoredSelection.isEmpty
+          ? availablePackages
+          : restoredSelection;
       _isLoaded = true;
     } catch (error) {
       _errorMessage = error.toString();
@@ -66,11 +78,16 @@ class AppSelectionViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void saveSelection(Set<String> packages) {
+  Future<void> saveSelection(Set<String> packages) async {
     final availablePackages = allPackages.toSet();
     _selectedPackages = packages
         .where((String packageName) => availablePackages.contains(packageName))
         .toSet();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _selectionKey,
+      _selectedPackages.toList(growable: false),
+    );
     notifyListeners();
   }
 }

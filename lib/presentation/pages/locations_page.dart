@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:pug_vpn/presentation/localization/app_strings.dart';
 import 'package:pug_vpn/presentation/theme/app_theme.dart';
 import 'package:pug_vpn/presentation/viewmodels/tab_viewmodel.dart';
 
@@ -51,6 +52,7 @@ class _LocationsPageState extends State<LocationsPage> {
   Widget build(BuildContext context) {
     final vm = context.watch<TabViewModel>();
     final palette = AppPalette.of(context);
+    final strings = AppStrings.of(context);
 
     return Stack(
       children: <Widget>[
@@ -82,7 +84,7 @@ class _LocationsPageState extends State<LocationsPage> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Locations',
+                      strings.locationsTitle,
                       style: TextStyle(
                         color: palette.primaryText,
                         fontSize: 28,
@@ -97,6 +99,7 @@ class _LocationsPageState extends State<LocationsPage> {
                   location: vm.connectedLocation,
                   details: vm.connectedDetails,
                   palette: palette,
+                  strings: strings,
                 ),
                 const SizedBox(height: 14),
                 Expanded(
@@ -298,12 +301,14 @@ class _ConnectionBanner extends StatelessWidget {
     required this.location,
     required this.details,
     required this.palette,
+    required this.strings,
   });
 
   final bool isConnected;
   final String location;
   final String details;
   final AppPalette palette;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {
@@ -326,8 +331,8 @@ class _ConnectionBanner extends StatelessWidget {
           Expanded(
             child: Text(
               isConnected
-                  ? 'Currently connected to $location'
-                  : 'Currently not connected',
+                  ? strings.connectedTo(location)
+                  : strings.notConnected,
               style: TextStyle(
                 color: isConnected ? const Color(0xFF56F2C4) : palette.secondaryText,
                 fontSize: 13,

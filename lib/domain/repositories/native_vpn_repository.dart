@@ -27,4 +27,6 @@ class NativeVpnRepository {
       _dao.saveDeviceKeyPair(keyPair);
 
   Future<List<DeviceApp>> listInstalledApps() => _dao.listInstalledApps();
+
+  Future<bool> shareText(String text) => _dao.shareText(text);
 }

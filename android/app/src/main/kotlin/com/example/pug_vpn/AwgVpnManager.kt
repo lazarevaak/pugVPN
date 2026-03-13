@@ -1,6 +1,10 @@
 package com.example.pug_vpn
 
 import android.app.Activity
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -13,8 +17,10 @@ import io.flutter.plugin.common.PluginRegistry
 import org.amnezia.awg.backend.GoBackend
 import org.amnezia.awg.backend.Tunnel
 import org.amnezia.awg.config.Config
+import java.io.ByteArrayOutputStream
 import java.io.BufferedReader
 import java.io.StringReader
+import java.util.Base64
 import java.util.Locale
 import java.util.concurrent.Executors
 
@@ -48,6 +54,7 @@ class AwgVpnManager(
             "loadDeviceKeyPair" -> loadDeviceKeyPair(result)
             "saveDeviceKeyPair" -> saveDeviceKeyPair(call, result)
             "listInstalledApps" -> listInstalledApps(result)
+            "shareText" -> shareText(call, result)
             else -> result.notImplemented()
         }
     }
@@ -165,9 +172,11 @@ class AwgVpnManager(
                     .mapNotNull { resolveInfo ->
                         val packageName = resolveInfo.activityInfo?.packageName ?: return@mapNotNull null
                         if (packageName == activity.packageName) return@mapNotNull null
+                        val iconDrawable = resolveInfo.loadIcon(packageManager)
                         mapOf(
                             "packageName" to packageName,
                             "label" to resolveInfo.loadLabel(packageManager).toString(),
+                            "iconBase64" to drawableToBase64(iconDrawable),
                         )
                     }
                     .distinctBy { it["packageName"] }
@@ -216,9 +225,49 @@ class AwgVpnManager(
         result.success(true)
     }
 
+    private fun shareText(call: MethodCall, result: MethodChannel.Result) {
+        val text = call.argument<String>("text")
+        if (text.isNullOrBlank()) {
+            result.error("INVALID_ARGS", "text is required.", null)
+            return
+        }
+
+        try {
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, text)
+            }
+            val chooser = Intent.createChooser(shareIntent, "Share PugVPN").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            activity.startActivity(chooser)
+            result.success(true)
+        } catch (error: Exception) {
+            result.error("SHARE_TEXT_ERROR", error.message ?: error.toString(), null)
+        }
+    }
+
     private fun sanitizeTunnelName(raw: String): String {
         val cleaned = raw.replace(Regex("[^a-zA-Z0-9_=+.-]"), "").take(15)
         return if (cleaned.isEmpty()) "pugvpn" else cleaned
+    }
+
+    private fun drawableToBase64(drawable: Drawable): String {
+        val bitmap = when (drawable) {
+            is BitmapDrawable -> drawable.bitmap
+            else -> {
+                val width = drawable.intrinsicWidth.takeIf { it > 0 } ?: 96
+                val height = drawable.intrinsicHeight.takeIf { it > 0 } ?: 96
+                Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { bitmap ->
+                    val canvas = Canvas(bitmap)
+                    drawable.setBounds(0, 0, canvas.width, canvas.height)
+                    drawable.draw(canvas)
+                }
+            }
+        }
+        val stream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        return Base64.getEncoder().encodeToString(stream.toByteArray())
     }
 
     private fun postSuccess(result: MethodChannel.Result, payload: Any) {
