@@ -1,6 +1,7 @@
 package com.example.pug_vpn
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.VpnService
@@ -23,6 +24,9 @@ class AwgVpnManager(
     companion object {
         const val CHANNEL = "pug_vpn/awg"
         private const val PREPARE_REQUEST_CODE = 7942
+        private const val STORAGE_NAME = "pug_vpn_storage"
+        private const val PRIVATE_KEY = "device_private_key_base64"
+        private const val PUBLIC_KEY = "device_public_key_base64"
     }
 
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -41,6 +45,8 @@ class AwgVpnManager(
             "connect" -> connect(call, result)
             "disconnect" -> disconnect(result)
             "status" -> status(result)
+            "loadDeviceKeyPair" -> loadDeviceKeyPair(result)
+            "saveDeviceKeyPair" -> saveDeviceKeyPair(call, result)
             "listInstalledApps" -> listInstalledApps(result)
             else -> result.notImplemented()
         }
@@ -171,6 +177,43 @@ class AwgVpnManager(
                 postError(result, "LIST_APPS_ERROR", error.message ?: error.toString())
             }
         }
+    }
+
+    private fun loadDeviceKeyPair(result: MethodChannel.Result) {
+        val preferences = activity.getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE)
+        val privateKey = preferences.getString(PRIVATE_KEY, null)
+        val publicKey = preferences.getString(PUBLIC_KEY, null)
+        if (privateKey.isNullOrBlank() || publicKey.isNullOrBlank()) {
+            result.success(null)
+            return
+        }
+
+        result.success(
+            mapOf(
+                "privateKeyBase64" to privateKey,
+                "publicKeyBase64" to publicKey,
+            ),
+        )
+    }
+
+    private fun saveDeviceKeyPair(call: MethodCall, result: MethodChannel.Result) {
+        val privateKey = call.argument<String>("privateKeyBase64")
+        val publicKey = call.argument<String>("publicKeyBase64")
+        if (privateKey.isNullOrBlank() || publicKey.isNullOrBlank()) {
+            result.error(
+                "INVALID_ARGS",
+                "privateKeyBase64 and publicKeyBase64 are required.",
+                null,
+            )
+            return
+        }
+
+        val preferences = activity.getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE)
+        preferences.edit()
+            .putString(PRIVATE_KEY, privateKey)
+            .putString(PUBLIC_KEY, publicKey)
+            .apply()
+        result.success(true)
     }
 
     private fun sanitizeTunnelName(raw: String): String {

@@ -1,5 +1,17 @@
 part of 'backend_store_dao.dart';
 
+class _DatabaseConnectionConfig {
+  const _DatabaseConnectionConfig({
+    required this.databaseName,
+    required this.openPrimary,
+    required this.openAdmin,
+  });
+
+  final String databaseName;
+  final Future<Connection> Function() openPrimary;
+  final Future<Connection> Function() openAdmin;
+}
+
 extension BackendStoreDaoSupport on BackendStoreDao {
   Future<void> _ensureInitialized() async {
     if (_initializing != null) {
@@ -53,25 +65,96 @@ extension BackendStoreDaoSupport on BackendStoreDao {
   }
 
   Future<Connection> _openConnection() async {
+    final config = _databaseConnectionConfig();
+    try {
+      return await config.openPrimary();
+    } on ServerException catch (error) {
+      if (error.code != '3D000' || config.databaseName == 'postgres') {
+        rethrow;
+      }
+
+      await _createMissingDatabase(config);
+      return config.openPrimary();
+    }
+  }
+
+  _DatabaseConnectionConfig _databaseConnectionConfig() {
     final databaseUrl = Platform.environment['PUGVPN_DATABASE_URL']?.trim();
     if (databaseUrl != null && databaseUrl.isNotEmpty) {
-      return Connection.openFromUrl(databaseUrl);
+      final primaryUrl = databaseUrl;
+      final primaryUri = Uri.parse(primaryUrl);
+      final queryParameters = Map<String, String>.from(
+        primaryUri.queryParameters,
+      );
+      final databaseName =
+          queryParameters['database'] ??
+          (primaryUri.pathSegments.isNotEmpty
+              ? primaryUri.pathSegments.first
+              : 'postgres');
+      final adminUri = primaryUri.replace(
+        path: '/postgres',
+        queryParameters: <String, String>{
+          ...queryParameters,
+          'database': 'postgres',
+        },
+      );
+      return _DatabaseConnectionConfig(
+        databaseName: databaseName,
+        openPrimary: () => Connection.openFromUrl(primaryUrl),
+        openAdmin: () => Connection.openFromUrl(adminUri.toString()),
+      );
     }
 
-    return Connection.open(
-      Endpoint(
-        host: Platform.environment['PUGVPN_DB_HOST']?.trim() ?? '127.0.0.1',
-        port: _envInt('PUGVPN_DB_PORT', 5432),
-        database: Platform.environment['PUGVPN_DB_NAME']?.trim() ?? 'pugvpn',
-        username: Platform.environment['PUGVPN_DB_USER']?.trim() ?? 'postgres',
-        password:
-            Platform.environment['PUGVPN_DB_PASSWORD']?.trim() ?? 'postgres',
+    final host = Platform.environment['PUGVPN_DB_HOST']?.trim() ?? '127.0.0.1';
+    final port = _envInt('PUGVPN_DB_PORT', 5432);
+    final databaseName =
+        Platform.environment['PUGVPN_DB_NAME']?.trim() ?? 'pugvpn';
+    final username =
+        Platform.environment['PUGVPN_DB_USER']?.trim() ?? 'postgres';
+    final password =
+        Platform.environment['PUGVPN_DB_PASSWORD']?.trim() ?? 'postgres';
+    final settings = ConnectionSettings(
+      applicationName: 'pug_vpn_backend',
+      sslMode: _sslModeFromEnv(),
+    );
+
+    return _DatabaseConnectionConfig(
+      databaseName: databaseName,
+      openPrimary: () => Connection.open(
+        Endpoint(
+          host: host,
+          port: port,
+          database: databaseName,
+          username: username,
+          password: password,
+        ),
+        settings: settings,
       ),
-      settings: ConnectionSettings(
-        applicationName: 'pug_vpn_backend',
-        sslMode: _sslModeFromEnv(),
+      openAdmin: () => Connection.open(
+        Endpoint(
+          host: host,
+          port: port,
+          database: 'postgres',
+          username: username,
+          password: password,
+        ),
+        settings: settings,
       ),
     );
+  }
+
+  Future<void> _createMissingDatabase(_DatabaseConnectionConfig config) async {
+    final adminConnection = await config.openAdmin();
+    try {
+      final escapedDatabaseName = config.databaseName.replaceAll('"', '""');
+      await adminConnection.execute('CREATE DATABASE "$escapedDatabaseName"');
+    } on ServerException catch (error) {
+      if (error.code != '42P04') {
+        rethrow;
+      }
+    } finally {
+      await adminConnection.close();
+    }
   }
 
   Future<void> _seedDefaults(Connection connection) async {

@@ -1,4 +1,5 @@
 import 'package:pug_vpn/domain/entities/device_app.dart';
+import 'package:pug_vpn/domain/entities/device_key_pair.dart';
 import 'package:pug_vpn/data/dao/native_vpn_dao.dart';
 
 class NativeVpnRepository {
@@ -17,6 +18,13 @@ class NativeVpnRepository {
   }) => _dao.importConfig(config: config, tunnelName: tunnelName);
 
   Future<void> disconnect() => _dao.disconnect();
+
+  Future<Map<String, dynamic>> status() => _dao.status();
+
+  Future<DeviceKeyPair?> loadDeviceKeyPair() => _dao.loadDeviceKeyPair();
+
+  Future<void> saveDeviceKeyPair(DeviceKeyPair keyPair) =>
+      _dao.saveDeviceKeyPair(keyPair);
 
   Future<List<DeviceApp>> listInstalledApps() => _dao.listInstalledApps();
 }

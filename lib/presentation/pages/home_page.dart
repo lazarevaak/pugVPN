@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
@@ -26,6 +27,7 @@ class _HomePageState extends State<HomePage>
   late final AnimationController _controller;
   late final BackendRepository _backend;
   late final NativeVpnRepository _nativeVpn;
+  Timer? _vpnStatusTimer;
 
   bool _isConnecting = false;
   bool _isConnected = false;
@@ -46,10 +48,13 @@ class _HomePageState extends State<HomePage>
       upperBound: 1.04,
       value: 1.0,
     );
+    _startVpnStatusPolling();
+    unawaited(_syncVpnStatusOnce());
   }
 
   @override
   void dispose() {
+    _vpnStatusTimer?.cancel();
     _backend.dispose();
     _controller.dispose();
     super.dispose();
@@ -75,23 +80,50 @@ class _HomePageState extends State<HomePage>
     _controller.repeat(reverse: true);
 
     try {
-      final keyPair = await DeviceKeyPair.generate();
+      debugPrint('[VPN] connect: start');
+      await _ensureTunnelStoppedBeforeConnect();
+      setState(() {
+        _statusLabel = 'Preparing device...';
+      });
+      debugPrint('[VPN] connect: load or create device key pair');
+      final keyPair = await _loadOrCreateDeviceKeyPair();
+      debugPrint('[VPN] connect: device key pair ready');
+      if (!mounted) return;
+      setState(() {
+        _statusLabel = 'Authorizing...';
+      });
+      debugPrint('[VPN] connect: login request');
       final token = await _backend.login(
         email: AppEnv.backendEmail,
         password: AppEnv.backendPassword,
       );
+      debugPrint('[VPN] connect: login success');
+      if (!mounted) return;
+      setState(() {
+        _statusLabel = 'Loading servers...';
+      });
+      debugPrint('[VPN] connect: fetchServers request');
       final servers = await _backend.fetchServers(accessToken: token);
+      debugPrint(
+        '[VPN] connect: fetchServers success (${servers.length} servers)',
+      );
       if (servers.isEmpty) {
         throw Exception('Backend returned no VPN servers.');
       }
 
       final server = servers.first;
+      if (!mounted) return;
+      setState(() {
+        _statusLabel = 'Preparing VPN config...';
+      });
+      debugPrint('[VPN] connect: buildConfig request for ${server.id}');
       final configResult = await _backend.buildConfig(
         accessToken: token,
         serverId: server.id,
         deviceName: _buildDeviceName(),
         devicePublicKey: keyPair.publicKeyBase64,
       );
+      debugPrint('[VPN] connect: buildConfig success');
 
       if (configResult.protocol != 'amneziawg') {
         throw Exception(
@@ -103,26 +135,38 @@ class _HomePageState extends State<HomePage>
         '<CLIENT_PRIVATE_KEY_FROM_DEVICE>',
         keyPair.privateKeyBase64,
       );
+      debugPrint('[VPN] connect: private key injected');
       final configForConnection = _isAndroidRuntime
           ? await _applySelectedAppsToConfig(preparedConfig)
           : preparedConfig;
+      debugPrint('[VPN] connect: native config prepared');
 
       if (_isAndroidRuntime || _isIosRuntime) {
+        if (!mounted) return;
+        setState(() {
+          _statusLabel = 'Starting tunnel...';
+        });
+        debugPrint('[VPN] connect: prepare native tunnel');
         final granted = await _nativeVpn.prepare();
+        debugPrint('[VPN] connect: prepare native tunnel result=$granted');
         if (!granted) {
           throw Exception('VPN permission not granted.');
         }
 
+        debugPrint('[VPN] connect: native connect request');
         final connected = await _nativeVpn.connect(
           config: configForConnection,
           tunnelName: 'pugvpn',
         );
+        debugPrint('[VPN] connect: native connect result=$connected');
         if (!connected) {
           throw Exception('Native VPN backend returned isUp=false.');
         }
       }
 
       if (!mounted) return;
+      debugPrint('[VPN] connect: success, start status polling');
+      _startVpnStatusPolling();
       context.read<TabViewModel>().setConnection(
         isConnected: true,
         location: server.location,
@@ -136,6 +180,7 @@ class _HomePageState extends State<HomePage>
         _errorMessage = null;
       });
     } catch (error) {
+      debugPrint('[VPN] connect: error=$error');
       if (!mounted) return;
       setState(() {
         _isConnected = false;
@@ -154,8 +199,21 @@ class _HomePageState extends State<HomePage>
     }
   }
 
+  Future<DeviceKeyPair> _loadOrCreateDeviceKeyPair() async {
+    final existing = await _nativeVpn.loadDeviceKeyPair();
+    if (existing != null) {
+      return existing;
+    }
+
+    final keyPair = await DeviceKeyPair.generate();
+    await _nativeVpn.saveDeviceKeyPair(keyPair);
+    return keyPair;
+  }
+
   Future<void> _disconnect() async {
     try {
+      _vpnStatusTimer?.cancel();
+      _vpnStatusTimer = null;
       if (_isAndroidRuntime || _isIosRuntime) {
         await _nativeVpn.disconnect();
       }
@@ -180,11 +238,117 @@ class _HomePageState extends State<HomePage>
     }
   }
 
+  Future<void> _ensureTunnelStoppedBeforeConnect() async {
+    if (!_isAndroidRuntime && !_isIosRuntime) {
+      return;
+    }
+
+    final status = await _nativeVpn.status();
+    final state = (status['state'] as String? ?? 'down').toLowerCase();
+    final isConnected = status['is_connected'] as bool? ?? false;
+    if (!isConnected &&
+        state != 'up' &&
+        state != 'connecting' &&
+        state != 'reasserting' &&
+        state != 'disconnecting') {
+      return;
+    }
+
+    debugPrint('[VPN] connect: stale tunnel state=$state, forcing disconnect');
+    await _nativeVpn.disconnect();
+    for (var attempt = 0; attempt < 10; attempt++) {
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      final currentStatus = await _nativeVpn.status();
+      final currentState = (currentStatus['state'] as String? ?? 'down')
+          .toLowerCase();
+      final currentConnected = currentStatus['is_connected'] as bool? ?? false;
+      if (!currentConnected &&
+          currentState != 'up' &&
+          currentState != 'connecting' &&
+          currentState != 'reasserting' &&
+          currentState != 'disconnecting') {
+        return;
+      }
+    }
+
+    throw Exception('Previous VPN tunnel is still shutting down.');
+  }
+
+  Future<void> _syncVpnStatusOnce() async {
+    if (!_isAndroidRuntime && !_isIosRuntime) {
+      return;
+    }
+
+    try {
+      final status = await _nativeVpn.status();
+      if (!mounted) return;
+      _applyNativeVpnStatus(status);
+    } catch (_) {
+      // Ignore initial status sync errors.
+    }
+  }
+
+  void _startVpnStatusPolling() {
+    _vpnStatusTimer?.cancel();
+    if (!_isAndroidRuntime && !_isIosRuntime) {
+      return;
+    }
+
+    _vpnStatusTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
+      if (!mounted) return;
+
+      try {
+        final status = await _nativeVpn.status();
+        if (!mounted) return;
+        _applyNativeVpnStatus(status);
+      } catch (_) {
+        // Ignore transient native status errors and keep existing UI state.
+      }
+    });
+  }
+
+  void _applyNativeVpnStatus(Map<String, dynamic> status) {
+    final state = (status['state'] as String? ?? 'down').toLowerCase();
+    final isConnected = status['is_connected'] as bool? ?? false;
+
+    if (isConnected || state == 'up') {
+      if (!_isConnected || _isConnecting || _statusLabel != 'Connected') {
+        setState(() {
+          _isConnected = true;
+          _isConnecting = false;
+          _statusLabel = 'Connected';
+          _errorMessage = null;
+        });
+      }
+      return;
+    }
+
+    if (state == 'connecting' || state == 'reasserting') {
+      if (!_isConnecting || _statusLabel != 'Connecting...') {
+        setState(() {
+          _isConnecting = true;
+          _statusLabel = 'Connecting...';
+        });
+      }
+      return;
+    }
+
+    if (_isConnected || _isConnecting || _statusLabel != 'Disconnected') {
+      setState(() {
+        _isConnected = false;
+        _isConnecting = false;
+        _statusLabel = 'Disconnected';
+      });
+    }
+  }
+
   Future<String> _applySelectedAppsToConfig(String config) async {
     final appSelectionVm = context.read<AppSelectionViewModel>();
     await appSelectionVm.ensureLoaded();
     final allPackages = appSelectionVm.allPackages;
-    final selectedPackages = appSelectionVm.selectedPackages.toList(growable: false);
+    final selectedPackages = appSelectionVm.selectedPackages.toList(
+      growable: false,
+    );
 
     if (allPackages.isEmpty || selectedPackages.length == allPackages.length) {
       return _stripApplicationRules(config);
@@ -315,180 +479,201 @@ class _HomePageState extends State<HomePage>
         Positioned.fill(
           child: Opacity(
             opacity: 0.08,
-            child: Image.asset('assets/images/world_map.png', fit: BoxFit.cover),
+            child: Image.asset(
+              'assets/images/world_map.png',
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         SafeArea(
-          child: Column(
-            children: <Widget>[
-              const SizedBox(height: 18),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
+          child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final imageSize = (constraints.maxHeight * 0.34).clamp(180.0, 260.0);
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 126),
+                child: Column(
                   children: <Widget>[
-                    Image.asset('assets/images/pug_icon.png', height: 38),
-                    const SizedBox(width: 12),
-                    Text(
-                      'PugVPN',
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w600,
-                        color: palette.primaryText,
+                    const SizedBox(height: 18),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Row(
+                        children: <Widget>[
+                          Image.asset('assets/images/pug_icon.png', height: 38),
+                          const SizedBox(width: 12),
+                          Text(
+                            'PugVPN',
+                            style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w600,
+                              color: palette.primaryText,
+                            ),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: () =>
+                                context.read<TabViewModel>().changeTab(2),
+                            icon: Icon(
+                              Icons.settings,
+                              color: palette.secondaryText,
+                              size: 28,
+                            ),
+                            splashRadius: 22,
+                          ),
+                        ],
                       ),
                     ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () => context.read<TabViewModel>().changeTab(2),
-                      icon: Icon(
-                        Icons.settings,
-                        color: palette.secondaryText,
-                        size: 28,
+                    const SizedBox(height: 24),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: LocationCard(
+                        location: _displayLocation,
+                        details: _displayLocationDetails,
+                        imageAsset: _selectedFlagAsset,
                       ),
-                      splashRadius: 22,
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: LocationCard(
-                  location: _displayLocation,
-                  details: _displayLocationDetails,
-                  imageAsset: _selectedFlagAsset,
-                ),
-              ),
-              Expanded(
-                child: Align(
-                  alignment: const Alignment(0, -0.15),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: <Widget>[
-                      Container(
-                        width: 260,
-                        height: 260,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: <BoxShadow>[
-                            BoxShadow(
-                              color: const Color(0xFF4EFFC5).withValues(
-                                alpha: 0.15,
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      height: imageSize + 28,
+                      child: Align(
+                        alignment: const Alignment(0, -0.15),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: <Widget>[
+                            Container(
+                              width: imageSize,
+                              height: imageSize,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: <BoxShadow>[
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xFF4EFFC5,
+                                    ).withValues(alpha: 0.15),
+                                    blurRadius: 120,
+                                    spreadRadius: 10,
+                                  ),
+                                ],
                               ),
-                              blurRadius: 120,
-                              spreadRadius: 10,
+                            ),
+                            ScaleTransition(
+                              scale: _controller,
+                              child: ImageFiltered(
+                                imageFilter: ImageFilter.blur(
+                                  sigmaX: _isConnecting ? 0.25 : 0,
+                                  sigmaY: _isConnecting ? 0.25 : 0,
+                                ),
+                                child: Image.asset(
+                                  _selectedCountryImageAsset,
+                                  width: imageSize + 120,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      ScaleTransition(
-                        scale: _controller,
-                        child: ImageFiltered(
-                          imageFilter: ImageFilter.blur(
-                            sigmaX: _isConnecting ? 0.25 : 0,
-                            sigmaY: _isConnecting ? 0.25 : 0,
+                    ),
+                    GestureDetector(
+                      onTap: _isConnecting ? null : _toggleConnection,
+                      child: Container(
+                        width: 300,
+                        height: 85,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(50),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: palette.isDark
+                                ? const <Color>[Color(0xFF2C3F55), Color(0xFF1A2636)]
+                                : const <Color>[Color(0xFF4A668D), Color(0xFF2D4260)],
                           ),
-                          child: Image.asset(
-                            _selectedCountryImageAsset,
-                            width: 380,
-                            fit: BoxFit.contain,
+                          boxShadow: <BoxShadow>[
+                            BoxShadow(
+                              color: palette.isDark
+                                  ? Colors.black.withValues(alpha: 0.8)
+                                  : const Color(0xFF9DAFCC).withValues(alpha: 0.55),
+                              blurRadius: 34,
+                              offset: const Offset(0, 25),
+                            ),
+                            BoxShadow(
+                              color: const Color(0xFF4EFFC5).withValues(alpha: 0.25),
+                              blurRadius: 20,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            const Icon(
+                              Icons.power_settings_new,
+                              color: Color(0xFF4EFFC5),
+                              size: 30,
+                            ),
+                            const SizedBox(width: 14),
+                            Flexible(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  buttonLabel,
+                                  maxLines: 1,
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    letterSpacing: 3,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Tap to secure your connection',
+                      style: TextStyle(color: palette.tertiaryText, fontSize: 14),
+                    ),
+                    const SizedBox(height: 10),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Text(
+                        _statusLabel,
+                        key: ValueKey<String>(_statusLabel),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          color: _isConnected
+                              ? const Color(0xFF4EFFC5)
+                              : _isConnecting
+                              ? const Color(0xFFFFE082)
+                              : Colors.redAccent,
+                        ),
+                      ),
+                    ),
+                    if (_errorMessage != null) ...<Widget>[
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          _errorMessage!,
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 12,
                           ),
                         ),
                       ),
                     ],
-                  ),
+                  ],
                 ),
-              ),
-              GestureDetector(
-                onTap: _isConnecting ? null : _toggleConnection,
-                child: Container(
-                  width: 300,
-                  height: 85,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(50),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: palette.isDark
-                          ? const <Color>[Color(0xFF2C3F55), Color(0xFF1A2636)]
-                          : const <Color>[Color(0xFF4A668D), Color(0xFF2D4260)],
-                    ),
-                    boxShadow: <BoxShadow>[
-                      BoxShadow(
-                        color: palette.isDark
-                            ? Colors.black.withValues(alpha: 0.8)
-                            : const Color(0xFF9DAFCC).withValues(alpha: 0.55),
-                        blurRadius: 34,
-                        offset: const Offset(0, 25),
-                      ),
-                      BoxShadow(
-                        color: const Color(0xFF4EFFC5).withValues(alpha: 0.25),
-                        blurRadius: 20,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      const Icon(
-                        Icons.power_settings_new,
-                        color: Color(0xFF4EFFC5),
-                        size: 30,
-                      ),
-                      const SizedBox(width: 14),
-                      Text(
-                        buttonLabel,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          letterSpacing: 3,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Tap to secure your connection',
-                style: TextStyle(color: palette.tertiaryText, fontSize: 14),
-              ),
-              const SizedBox(height: 10),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: Text(
-                  _statusLabel,
-                  key: ValueKey<String>(_statusLabel),
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    color: _isConnected
-                        ? const Color(0xFF4EFFC5)
-                        : _isConnecting
-                        ? const Color(0xFFFFE082)
-                        : Colors.redAccent,
-                  ),
-                ),
-              ),
-              if (_errorMessage != null) ...<Widget>[
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Text(
-                    _errorMessage!,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.redAccent,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 126),
-            ],
+              );
+            },
           ),
         ),
       ],
