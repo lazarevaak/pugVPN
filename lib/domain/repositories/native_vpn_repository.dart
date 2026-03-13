@@ -1,3 +1,4 @@
+import 'package:pug_vpn/domain/entities/device_app.dart';
 import 'package:pug_vpn/data/dao/native_vpn_dao.dart';
 
 class NativeVpnRepository {
@@ -16,4 +17,6 @@ class NativeVpnRepository {
   }) => _dao.importConfig(config: config, tunnelName: tunnelName);
 
   Future<void> disconnect() => _dao.disconnect();
+
+  Future<List<DeviceApp>> listInstalledApps() => _dao.listInstalledApps();
 }
