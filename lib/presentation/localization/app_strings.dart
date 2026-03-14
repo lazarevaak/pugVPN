@@ -21,7 +21,7 @@ class AppStrings {
   String get settingsTab => _isRussian ? 'Настройки' : 'Settings';
   String get premiumTab => 'Premium';
 
-  String get appName => 'PugVPN';
+  String get appName => 'PUGVPN';
   String get locationsTitle => _isRussian ? 'Локации' : 'Locations';
   String get settingsTitle => _isRussian ? 'Настройки' : 'Settings';
   String get selectAppsTitle => _isRussian ? 'Выбор приложений' : 'Select Apps';
@@ -55,10 +55,10 @@ class AppStrings {
       _isRussian ? 'Текст для отправки скопирован' : 'Share text copied';
   String get languageChoice =>
       _isRussian ? 'Выберите язык' : 'Choose language';
-  String get aboutTitle => _isRussian ? 'О PugVPN' : 'About PugVPN';
+  String get aboutTitle => _isRussian ? 'О PUGVPN' : 'About PUGVPN';
   String get aboutBody => _isRussian
-      ? 'PugVPN это быстрый и простой VPN-клиент с выбором локаций, темной и светлой темой, а также управлением приложениями, которые используют VPN.'
-      : 'PugVPN is a simple VPN client with location selection, light and dark themes, and per-app VPN controls.';
+      ? 'PUGVPN это быстрый и простой VPN-клиент с выбором локаций, темной и светлой темой, а также управлением приложениями, которые используют VPN.'
+      : 'PUGVPN is a simple VPN client with location selection, light and dark themes, and per-app VPN controls.';
   String get close => _isRussian ? 'Закрыть' : 'Close';
 
   String get english => 'English';

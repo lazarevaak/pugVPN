@@ -23,11 +23,10 @@ class PremiumPage extends StatelessWidget {
         ),
       ),
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 146),
           child: Column(
             children: <Widget>[
-              const SizedBox(height: 18),
               Row(
                 children: <Widget>[
                   IconButton(
@@ -39,22 +38,24 @@ class PremiumPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  Text(
-                    strings.premiumTitle,
-                    style: TextStyle(
-                      color: palette.primaryText,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Text(
+                      strings.premiumTitle,
+                      style: TextStyle(
+                        color: palette.primaryText,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const Spacer(),
+              const SizedBox(height: 22),
               ClipRRect(
                 borderRadius: BorderRadius.circular(30),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 28),
+                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(30),
                     gradient: LinearGradient(
@@ -102,8 +103,6 @@ class PremiumPage extends StatelessWidget {
                   ),
                 ),
               ),
-              const Spacer(),
-              const SizedBox(height: 112),
             ],
           ),
         ),

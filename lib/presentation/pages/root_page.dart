@@ -17,8 +17,6 @@ class RootPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<TabViewModel>();
-    final palette = AppPalette.of(context);
-    final strings = AppStrings.of(context);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -38,7 +36,7 @@ class RootPage extends StatelessWidget {
           Positioned(
             left: 24,
             right: 24,
-            bottom: 24,
+            bottom: 16,
             child: _GlassTabBar(
               selectedIndex: vm.index,
               onSelected: vm.changeTab,
@@ -86,7 +84,7 @@ class _GlassTabBar extends StatelessWidget {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
           child: Container(
-            height: 88,
+            height: 82,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(28),
               gradient: LinearGradient(
@@ -173,12 +171,12 @@ class _NavItem extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 4),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Container(
-              margin: const EdgeInsets.only(bottom: 4),
+              margin: const EdgeInsets.only(bottom: 3),
               decoration: active
                   ? BoxDecoration(
                       shape: BoxShape.circle,
@@ -191,20 +189,20 @@ class _NavItem extends StatelessWidget {
                       ],
                     )
                   : null,
-              child: Icon(icon, color: color, size: 24),
+              child: Icon(icon, color: color, size: 22),
             ),
-            Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  softWrap: false,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 10,
-                    fontWeight: active ? FontWeight.w600 : FontWeight.w500,
-                  ),
+            SizedBox(
+              height: 20,
+              child: Text(
+                label,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 9,
+                  height: 1,
+                  fontWeight: active ? FontWeight.w600 : FontWeight.w500,
                 ),
               ),
             ),

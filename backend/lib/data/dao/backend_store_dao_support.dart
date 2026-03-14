@@ -33,7 +33,38 @@ extension BackendStoreDaoSupport on BackendStoreDao {
   Future<void> _initialize() async {
     final connection = await _db();
     await BackendStoreDao._migrationRunner.migrate(connection);
+    await _ensureLegacySchemaCompat(connection);
     await _seedDefaults(connection);
+  }
+
+  Future<void> _ensureLegacySchemaCompat(Connection connection) async {
+    await connection.execute('''
+      CREATE TABLE IF NOT EXISTS audit_logs (
+        id TEXT PRIMARY KEY,
+        event_type TEXT NOT NULL,
+        severity TEXT NOT NULL,
+        user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+        request_id TEXT,
+        client_ip TEXT,
+        target_type TEXT,
+        target_id TEXT,
+        details TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    ''');
+
+    await connection.execute('''
+      CREATE INDEX IF NOT EXISTS audit_logs_event_created_idx
+        ON audit_logs (event_type, created_at DESC)
+    ''');
+    await connection.execute('''
+      CREATE INDEX IF NOT EXISTS audit_logs_target_idx
+        ON audit_logs (target_type, target_id, created_at DESC)
+    ''');
+    await connection.execute('''
+      CREATE INDEX IF NOT EXISTS audit_logs_client_ip_idx
+        ON audit_logs (client_ip, created_at DESC)
+    ''');
   }
 
   Future<Connection> _db() async {

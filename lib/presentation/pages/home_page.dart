@@ -237,7 +237,7 @@ class _HomePageState extends State<HomePage>
 
   Future<void> _shareApp() async {
     const shareText =
-        'PugVPN\nSecure. Fast. Private.\nDownload and try the app.';
+        'PUGVPN\nSecure. Fast. Private.\nDownload and try the app.';
     await _nativeVpn.shareText(shareText);
   }
 
@@ -516,24 +516,28 @@ class _HomePageState extends State<HomePage>
                         children: <Widget>[
                           Image.asset('assets/images/pug_icon.png', height: 38),
                           const SizedBox(width: 12),
-                          Text(
-                            strings.appName,
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w600,
-                              color: palette.primaryText,
+                          Expanded(
+                            child: Text(
+                              strings.appName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w600,
+                                color: palette.primaryText,
+                              ),
                             ),
                           ),
-                          const Spacer(),
                           IconButton(
                             onPressed: _shareApp,
                             icon: Icon(
                               Icons.share_rounded,
                               color: palette.secondaryText,
-                              size: 26,
+                              size: 24,
                             ),
                             tooltip: strings.shareApp,
-                            splashRadius: 22,
+                            visualDensity: VisualDensity.compact,
+                            splashRadius: 20,
                           ),
                           IconButton(
                             onPressed: () =>
@@ -541,9 +545,10 @@ class _HomePageState extends State<HomePage>
                             icon: Icon(
                               Icons.settings,
                               color: palette.secondaryText,
-                              size: 28,
+                              size: 24,
                             ),
-                            splashRadius: 22,
+                            visualDensity: VisualDensity.compact,
+                            splashRadius: 20,
                           ),
                         ],
                       ),

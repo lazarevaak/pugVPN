@@ -21,8 +21,6 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   late final NativeVpnRepository _nativeVpn;
-  bool _killSwitch = true;
-  bool _autoConnect = true;
 
   @override
   void initState() {
@@ -50,11 +48,10 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
         SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 146),
             child: Column(
               children: <Widget>[
-                const SizedBox(height: 18),
                 Row(
                   children: <Widget>[
                     IconButton(
@@ -66,12 +63,14 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    Text(
-                      strings.settingsTitle,
-                      style: TextStyle(
-                        color: palette.primaryText,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: Text(
+                        strings.settingsTitle,
+                        style: TextStyle(
+                          color: palette.primaryText,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -136,8 +135,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   palette: palette,
                   onTap: () => _showAboutDialog(context),
                 ),
-                const Spacer(),
-                const SizedBox(height: 112),
               ],
             ),
           ),
@@ -214,7 +211,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _shareApp(BuildContext context) async {
     const shareText =
-        'PugVPN\nSecure. Fast. Private.\nDownload and try the app.';
+        'PUGVPN\nSecure. Fast. Private.\nDownload and try the app.';
     await _nativeVpn.shareText(shareText);
   }
 

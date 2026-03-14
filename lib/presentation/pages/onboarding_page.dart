@@ -77,7 +77,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       ),
                       const SizedBox(height: 26),
                       const Text(
-                        'PugVPN',
+                        'PUGVPN',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 28,
@@ -117,7 +117,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'PugVPN',
+                          'PUGVPN',
                           style: TextStyle(
                             color: isDark
                                 ? Colors.white
