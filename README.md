@@ -18,3 +18,10 @@
 
 flutter run
 
+
+## Демо
+Андройд:
+https://drive.google.com/file/d/1Fb3Lwq2Kq8U1vyIofGRfoo9SBBzg56zv/view?usp=sharing
+
+iOS:
+https://drive.google.com/file/d/1SZe0pTW4RSwKPIEXsTiD1Cub8ipVFjEu/view?usp=sharing
