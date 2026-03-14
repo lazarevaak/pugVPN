@@ -349,20 +349,53 @@ class _HomePageState extends State<HomePage>
     final appSelectionVm = context.read<AppSelectionViewModel>();
     await appSelectionVm.ensureLoaded();
     final allPackages = appSelectionVm.allPackages;
-    final selectedPackages = appSelectionVm.selectedPackages.toList(
-      growable: false,
-    );
+    final selectedPackages = appSelectionVm.selectedPackages.toSet();
 
     if (allPackages.isEmpty ||
         selectedPackages.isEmpty ||
         selectedPackages.length == allPackages.length) {
+      debugPrint('[VPN] connect: app filter disabled (all apps)');
       return _stripApplicationRules(config);
     }
 
+    final expandedPackages = _expandAndroidIncludedPackages(
+      allPackages: allPackages.toSet(),
+      selectedPackages: selectedPackages,
+    ).toList(growable: false)
+      ..sort();
+
     final rules = <String>[
-      'IncludedApplications = ${selectedPackages.join(", ")}',
+      'IncludedApplications = ${expandedPackages.join(", ")}',
     ];
+    debugPrint(
+      '[VPN] connect: app filter enabled (${expandedPackages.length} packages)',
+    );
     return _insertApplicationRules(config, rules);
+  }
+
+  Set<String> _expandAndroidIncludedPackages({
+    required Set<String> allPackages,
+    required Set<String> selectedPackages,
+  }) {
+    if (!_isAndroidRuntime) {
+      return selectedPackages;
+    }
+
+    final expanded = <String>{...selectedPackages};
+    const supportPackages = <String>{
+      'com.google.android.gms',
+      'com.google.android.webview',
+      'com.android.webview',
+      'com.android.chrome',
+    };
+
+    for (final packageName in supportPackages) {
+      if (allPackages.contains(packageName)) {
+        expanded.add(packageName);
+      }
+    }
+
+    return expanded;
   }
 
   String _stripApplicationRules(String config) {

@@ -116,7 +116,11 @@ class _SelectAppsPageState extends State<SelectAppsPage> {
                       });
                     },
                     onReset: () {
-                      setState(_draftSelection.clear);
+                      setState(() {
+                        _draftSelection
+                          ..clear()
+                          ..addAll(vm.allPackages);
+                      });
                     },
                   ),
                   const SizedBox(height: 14),
