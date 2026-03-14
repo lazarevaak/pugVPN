@@ -1,24 +1,20 @@
-# pug_vpn
+# pugVPN - Flutter Project
 
-A new Flutter project.
+Умный VPN, который работает только там, где это нужно.
 
-## Android build notes (AmneziaWG)
+Ссылка на презентацию: https://www.figma.com/slides/zBsRJQ6AbFmz5AsUALhjuK/pugVPN?node-id=12-329&t=Nxr3MXiZc6e4IRSv-0
 
-- The Android AWG integration is connected as a git submodule (`android/amneziawg-android`).
-- After clone, run:
-  - `git submodule update --init --recursive`
-- Build uses Gradle wrapper (`android/gradlew`) and requires a compatible JDK (`17..24`).
-- On macOS/Linux wrapper tries to auto-pick JDK 21/17 if your default Java is too new.
+## Функционал 
+- Выбор конкретных приложений, через которые работает VPN (Per-App VPN) для Android
+- Подключение в один тап и выбор страны подключения
+- Поддержка iOS/Android, также в скоре Macos
+- Бесплатный режим + подписка без рекламы (в будущем)
+- Поддержка темной и светлой темы и смена языка (Англиский/Русский)
 
-## Getting Started
+## Per-App VPN (Split Tunneling)
+Реализована логика маршрутизации трафика так, чтобы VPN работал только для выбранных приложений, не затрагивая остальные сервисы устройства. 
 
-This project is a starting point for a Flutter application.
+## Запуск
 
-A few resources to get you started if this is your first Flutter project:
+flutter run
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
