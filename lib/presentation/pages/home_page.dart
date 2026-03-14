@@ -353,15 +353,14 @@ class _HomePageState extends State<HomePage>
       growable: false,
     );
 
-    if (allPackages.isEmpty || selectedPackages.length == allPackages.length) {
+    if (allPackages.isEmpty ||
+        selectedPackages.isEmpty ||
+        selectedPackages.length == allPackages.length) {
       return _stripApplicationRules(config);
     }
 
     final rules = <String>[
-      if (selectedPackages.isEmpty)
-        'ExcludedApplications = ${allPackages.join(", ")}'
-      else
-        'IncludedApplications = ${selectedPackages.join(", ")}',
+      'IncludedApplications = ${selectedPackages.join(", ")}',
     ];
     return _insertApplicationRules(config, rules);
   }

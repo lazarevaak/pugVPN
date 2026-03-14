@@ -74,7 +74,7 @@ class AppSelectionViewModel extends ChangeNotifier {
   }
 
   void reset() {
-    _selectedPackages = <String>{};
+    _selectedPackages = _apps.map((DeviceApp app) => app.packageName).toSet();
     notifyListeners();
   }
 

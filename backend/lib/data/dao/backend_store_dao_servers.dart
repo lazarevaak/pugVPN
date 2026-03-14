@@ -43,9 +43,14 @@ extension BackendStoreDaoServers on BackendStoreDao {
 
   Future<bool> healthCheck() async {
     await _ensureInitialized();
-    final connection = await _db();
-    await connection.execute('SELECT 1');
-    return true;
+    final connectionConfig = _databaseConnectionConfig();
+    final connection = await connectionConfig.openPrimary();
+    try {
+      await connection.execute('SELECT 1');
+      return true;
+    } finally {
+      await connection.close();
+    }
   }
 
   Future<int> _remainingIpSlots(Connection connection, String serverId) async {
