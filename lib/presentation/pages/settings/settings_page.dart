@@ -3,11 +3,10 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:pug_vpn/core/providers.dart';
-import 'package:pug_vpn/domain/repositories/native_vpn_repository.dart';
 import 'package:pug_vpn/presentation/localization/app_strings.dart';
 import 'package:pug_vpn/presentation/pages/select_apps_page.dart';
 import 'package:pug_vpn/presentation/theme/app_theme.dart';
+import 'package:pug_vpn/presentation/viewmodels/home_viewmodel.dart';
 import 'package:pug_vpn/presentation/viewmodels/language_viewmodel.dart';
 import 'package:pug_vpn/presentation/viewmodels/tab_viewmodel.dart';
 import 'package:pug_vpn/presentation/viewmodels/theme_viewmodel.dart';
@@ -20,14 +19,6 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  late final NativeVpnRepository _nativeVpn;
-
-  @override
-  void initState() {
-    super.initState();
-    _nativeVpn = createNativeVpnRepository();
-  }
-
   @override
   Widget build(BuildContext context) {
     final palette = AppPalette.of(context);
@@ -210,9 +201,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _shareApp(BuildContext context) async {
-    const shareText =
-        'PUGVPN\nSecure. Fast. Private.\nDownload and try the app.';
-    await _nativeVpn.shareText(shareText);
+    await context.read<HomeViewModel>().shareApp();
   }
 
   Future<void> _showAboutDialog(BuildContext context) async {
@@ -347,7 +336,7 @@ class _SettingsSwitchTile extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: Colors.white,
+            activeThumbColor: Colors.white,
             activeTrackColor: activeColor,
             inactiveThumbColor:
                 palette.isDark ? Colors.white54 : const Color(0xFFFDFEFF),

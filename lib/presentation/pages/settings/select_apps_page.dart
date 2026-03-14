@@ -3,12 +3,11 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:pug_vpn/core/providers.dart';
 import 'package:pug_vpn/domain/entities/device_app.dart';
-import 'package:pug_vpn/domain/repositories/native_vpn_repository.dart';
 import 'package:pug_vpn/presentation/localization/app_strings.dart';
 import 'package:pug_vpn/presentation/theme/app_theme.dart';
 import 'package:pug_vpn/presentation/viewmodels/app_selection_viewmodel.dart';
+import 'package:pug_vpn/presentation/viewmodels/home_viewmodel.dart';
 import 'package:pug_vpn/presentation/viewmodels/tab_viewmodel.dart';
 
 class SelectAppsPage extends StatefulWidget {
@@ -19,14 +18,12 @@ class SelectAppsPage extends StatefulWidget {
 }
 
 class _SelectAppsPageState extends State<SelectAppsPage> {
-  late final NativeVpnRepository _nativeVpn;
   final Set<String> _draftSelection = <String>{};
   bool _initializedDraft = false;
 
   @override
   void initState() {
     super.initState();
-    _nativeVpn = createNativeVpnRepository();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AppSelectionViewModel>().ensureLoaded();
     });
@@ -191,27 +188,22 @@ class _SelectAppsPageState extends State<SelectAppsPage> {
 
   Future<void> _saveSelection(BuildContext context) async {
     final selectionVm = context.read<AppSelectionViewModel>();
+    final homeVm = context.read<HomeViewModel>();
     final tabVm = context.read<TabViewModel>();
+    final navigator = Navigator.of(context);
     final previousSelection = selectionVm.selectedPackages;
     final hasChanged = !_sameSelection(previousSelection, _draftSelection);
 
     await selectionVm.saveSelection(_draftSelection);
 
     if (hasChanged) {
-      if (tabVm.isConnected) {
-        await _nativeVpn.disconnect();
-      }
+      await homeVm.handleAppSelectionChanged();
       if (!mounted) return;
-      tabVm.setConnection(
-        isConnected: false,
-        location: 'RU',
-        details: 'Russia',
-      );
       tabVm.changeTab(0);
     }
 
     if (!mounted) return;
-    Navigator.of(context).pop();
+    navigator.pop();
   }
 
   bool _sameSelection(Set<String> left, Set<String> right) {

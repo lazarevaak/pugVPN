@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'package:pug_vpn/presentation/localization/app_strings.dart';
 import 'package:pug_vpn/presentation/theme/app_theme.dart';
+import 'package:pug_vpn/presentation/viewmodels/home_viewmodel.dart';
 import 'package:pug_vpn/presentation/viewmodels/tab_viewmodel.dart';
 
 class LocationsPage extends StatefulWidget {
@@ -50,7 +51,7 @@ class _LocationsPageState extends State<LocationsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<TabViewModel>();
+    final homeVm = context.watch<HomeViewModel>();
     final palette = AppPalette.of(context);
     final strings = AppStrings.of(context);
 
@@ -95,9 +96,9 @@ class _LocationsPageState extends State<LocationsPage> {
                 ),
                 const SizedBox(height: 14),
                 _ConnectionBanner(
-                  isConnected: vm.isConnected,
-                  location: vm.connectedLocation,
-                  details: vm.connectedDetails,
+                  isConnected: homeVm.isConnected,
+                  location: homeVm.location,
+                  details: homeVm.locationDetails,
                   palette: palette,
                   strings: strings,
                 ),
@@ -108,10 +109,10 @@ class _LocationsPageState extends State<LocationsPage> {
                     itemBuilder: (BuildContext context, int index) {
                       final item = _items[index];
                       final isSelected = index == _selectedIndex;
-                      final isConnectedTo = vm.isConnected &&
+                      final isConnectedTo = homeVm.isConnected &&
                           _matchesConnectedLocation(
                             item.country,
-                            vm.connectedLocation,
+                            homeVm.location,
                           );
                       return _LocationRow(
                         item: item,
