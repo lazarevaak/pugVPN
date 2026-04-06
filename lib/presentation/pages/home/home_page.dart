@@ -4,10 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:pug_vpn/presentation/localization/app_strings.dart';
+
+import 'package:pug_vpn/presentation/pages/home/locations_page.dart';
 import 'package:pug_vpn/presentation/theme/app_theme.dart';
+
 import 'package:pug_vpn/presentation/viewmodels/home_viewmodel.dart';
 import 'package:pug_vpn/presentation/viewmodels/tab_viewmodel.dart';
 import 'package:pug_vpn/presentation/widgets/location_card.dart';
+import 'package:pug_vpn/presentation/widgets/location_item.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,6 +23,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  bool _isOpeningLocations = false;
 
   @override
   void initState() {
@@ -94,9 +99,9 @@ class _HomePageState extends State<HomePage>
         SafeArea(
           child: LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
-              final imageSize = (constraints.maxHeight * 0.34).clamp(
-                180.0,
-                260.0,
+              final imageSize = (constraints.maxHeight * 0.62).clamp(
+                270.0,
+                500.0,
               );
 
               return SingleChildScrollView(
@@ -108,7 +113,7 @@ class _HomePageState extends State<HomePage>
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Row(
                         children: <Widget>[
-                          Image.asset('assets/images/pug_icon.png', height: 38),
+                          Image.asset('assets/images/pug_icon.png', height: 54),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
@@ -134,7 +139,7 @@ class _HomePageState extends State<HomePage>
                             splashRadius: 20,
                           ),
                           IconButton(
-                            onPressed: () => tabVm.changeTab(2),
+                            onPressed: () => tabVm.changeTab(1),
                             icon: Icon(
                               Icons.settings,
                               color: palette.secondaryText,
@@ -152,14 +157,37 @@ class _HomePageState extends State<HomePage>
                       child: LocationCard(
                         location: vm.displayLocation,
                         details: vm.displayLocationDetails,
-                        imageAsset: _flagAsset(vm.displayLocation),
+                        imageAsset: LocationAsset.fromValue(
+                          vm.displayCountryName,
+                        ).flagAsset,
+                        isOpening: _isOpeningLocations,
+                        onTap: () async {
+                          if (_isOpeningLocations) return;
+                          final navigator = Navigator.of(context);
+                          setState(() {
+                            _isOpeningLocations = true;
+                          });
+                          await Future<void>.delayed(
+                            const Duration(milliseconds: 180),
+                          );
+                          if (!mounted) return;
+                          await navigator.push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const LocationsPage(),
+                            ),
+                          );
+                          if (!mounted) return;
+                          setState(() {
+                            _isOpeningLocations = false;
+                          });
+                        },
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 0),
                     SizedBox(
-                      height: imageSize + 28,
+                      height: imageSize - 132,
                       child: Align(
-                        alignment: const Alignment(0, -0.15),
+                        alignment: const Alignment(0, 0.34),
                         child: Stack(
                           alignment: Alignment.center,
                           children: <Widget>[
@@ -189,8 +217,10 @@ class _HomePageState extends State<HomePage>
                                   sigmaY: vm.isConnecting ? 0.25 : 0,
                                 ),
                                 child: Image.asset(
-                                  _countryImageAsset(vm.displayLocation),
-                                  width: imageSize + 120,
+                                  LocationAsset.fromValue(
+                                    vm.displayCountryName,
+                                  ).countryImageAsset,
+                                  width: imageSize + 260,
                                   fit: BoxFit.contain,
                                 ),
                               ),
@@ -202,7 +232,7 @@ class _HomePageState extends State<HomePage>
                     GestureDetector(
                       onTap: vm.isConnecting ? null : vm.toggleConnection,
                       child: Container(
-                        width: 300,
+                        width: 360,
                         height: 85,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(50),
@@ -320,44 +350,4 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-  String _countryImageAsset(String value) {
-    final normalized = value.trim().toUpperCase();
-    switch (normalized) {
-      case 'FI':
-      case 'FINLAND':
-        return 'assets/pug_countries/pug_finland.png';
-      case 'DE':
-      case 'GERMANY':
-        return 'assets/pug_countries/pug_germany.png';
-      case 'US':
-      case 'USA':
-      case 'UNITED STATES':
-        return 'assets/pug_countries/pug_usa.png';
-      case 'RU':
-      case 'RUSSIA':
-        return 'assets/pug_countries/pug_russia.png';
-      default:
-        return 'assets/images/pug_vpn.png';
-    }
-  }
-
-  String _flagAsset(String value) {
-    final normalized = value.trim().toUpperCase();
-    switch (normalized) {
-      case 'FI':
-      case 'FINLAND':
-        return 'assets/flags/finland_flag.png';
-      case 'DE':
-      case 'GERMANY':
-        return 'assets/flags/germany_flag.png';
-      case 'US':
-      case 'USA':
-      case 'UNITED STATES':
-        return 'assets/flags/usa_flag.png';
-      case 'RU':
-      case 'RUSSIA':
-      default:
-        return 'assets/flags/russia_flag.png';
-    }
-  }
 }

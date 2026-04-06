@@ -43,8 +43,9 @@ class HomeViewModel extends ChangeNotifier {
   String get locationDetails => _locationDetails;
   String get statusLabel => _statusLabel;
   String? get errorMessage => _errorMessage;
-  String get displayLocation => _isConnected ? _location : 'RU';
-  String get displayLocationDetails => _isConnected ? _locationDetails : 'Russia';
+  String get displayLocation => _displayLocationCode(_location);
+  String get displayLocationDetails => _displayLocationName(_location);
+  String get displayCountryName => _countryNameFor(displayLocation);
 
   bool get _useNativeTunnel =>
       !kIsWeb &&
@@ -73,8 +74,15 @@ class HomeViewModel extends ChangeNotifier {
     await connect();
   }
 
-  Future<void> connect() async {
+  Future<void> connect({String? preferredLocation}) async {
+    final targetLocation = preferredLocation ?? _location;
     _isConnecting = true;
+    _isConnected = false;
+    _location = _countryNameFor(targetLocation);
+    _locationDetails = preferredLocation == null
+        ? 'Fastest location'
+        : 'Selected region';
+    _statusLabel = 'Connecting...';
     _errorMessage = null;
     notifyListeners();
 
@@ -87,6 +95,7 @@ class HomeViewModel extends ChangeNotifier {
         selectedPackages: _appSelectionViewModel.selectedPackages.toList(
           growable: false,
         ),
+        preferredLocation: preferredLocation,
         onProgress: (String status) {
           _statusLabel = status;
           notifyListeners();
@@ -211,5 +220,34 @@ class HomeViewModel extends ChangeNotifier {
       TargetPlatform.fuchsia => 'fuchsia',
     };
     return 'pug-$platform-$ts';
+  }
+
+  String _countryNameFor(String value) {
+    final normalized = value.trim().toUpperCase();
+    return switch (normalized) {
+      'FI' || 'FINLAND' => 'Finland',
+      'DE' || 'GERMANY' => 'Germany',
+      'US' || 'USA' || 'UNITED STATES' => 'United States',
+      _ => value,
+    };
+  }
+
+  String _displayLocationCode(String value) {
+    final normalized = value.trim().toUpperCase();
+    return switch (normalized) {
+      'AUTO' => 'AUTO',
+      'FINLAND' => 'FI',
+      'GERMANY' => 'DE',
+      'UNITED STATES' => 'US',
+      _ => value,
+    };
+  }
+
+  String _displayLocationName(String value) {
+    final normalized = value.trim().toUpperCase();
+    return switch (normalized) {
+      'AUTO' => 'Auto Connect',
+      _ => _countryNameFor(value),
+    };
   }
 }

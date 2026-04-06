@@ -12,9 +12,10 @@
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		355DED4DB52574DBC76273F7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC16DE79529760E409C8352C /* Foundation.framework */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
-		6D01502AE853E9F5F3E2C559 /* WireGuardKit in Frameworks */ = {isa = PBXBuildFile; productRef = 92946DB5C19C45417B29156E /* WireGuardKit */; };
-		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
-		7F5EAC73561A057822A792CC /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E1540377987750E95F83D1A /* PacketTunnelProvider.swift */; };
+			6D01502AE853E9F5F3E2C559 /* WireGuardKit in Frameworks */ = {isa = PBXBuildFile; productRef = 92946DB5C19C45417B29156E /* WireGuardKit */; };
+			74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
+			74858FB01ED2DC5600515810 /* PugFlutterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FB11ED2DC5600515810 /* PugFlutterViewController.swift */; };
+			7F5EAC73561A057822A792CC /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E1540377987750E95F83D1A /* PacketTunnelProvider.swift */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
@@ -87,13 +88,14 @@
 		664645D7C90E2C73630240CC /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		6BED67369DFE9B1ADA3EE237 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6F2D97F069F24D34560AE965 /* IosAwgVpnManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IosAwgVpnManager.swift; sourceTree = "<group>"; };
-		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
-		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
+			74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
+			74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+			74858FB11ED2DC5600515810 /* PugFlutterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PugFlutterViewController.swift; sourceTree = "<group>"; };
+			7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
 		851DCECE60EF973030278719 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
-		97C146EE1CF9000F007C117D /* PUGVPN.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PUGVPN.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		97C146EE1CF9000F007C117D /* pugVPN.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PUGVPN.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		97C146FB1CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -214,7 +216,7 @@
 		97C146EF1CF9000F007C117D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				97C146EE1CF9000F007C117D /* PUGVPN.app */,
+				97C146EE1CF9000F007C117D /* pugVPN.app */,
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
 				5C864DF7FBA4721983E46ACC /* PugVPNNetworkExtension.appex */,
 			);
@@ -229,10 +231,11 @@
 				97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
 				97C147021CF9000F007C117D /* Info.plist */,
 				1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */,
-				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
-				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
-				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
-				6F2D97F069F24D34560AE965 /* IosAwgVpnManager.swift */,
+					1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
+					74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
+					74858FB11ED2DC5600515810 /* PugFlutterViewController.swift */,
+					74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
+					6F2D97F069F24D34560AE965 /* IosAwgVpnManager.swift */,
 				4B8D45E981B02158C330AC09 /* Runner.entitlements */,
 			);
 			path = Runner;
@@ -302,7 +305,7 @@
 			);
 			name = Runner;
 			productName = Runner;
-			productReference = 97C146EE1CF9000F007C117D /* PUGVPN.app */;
+			productReference = 97C146EE1CF9000F007C117D /* pugVPN.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -507,10 +510,11 @@
 		97C146EA1CF9000F007C117D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
-			files = (
-				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
-				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
-				B5A98A6C6DB18AAD54958E99 /* IosAwgVpnManager.swift in Sources */,
+				files = (
+					74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
+					74858FB01ED2DC5600515810 /* PugFlutterViewController.swift in Sources */,
+					1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
+					B5A98A6C6DB18AAD54958E99 /* IosAwgVpnManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -625,13 +629,14 @@
 				DEVELOPMENT_TEAM = DL4H45878X;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = pugVPN;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.nukimo.PugVPN;
-				PRODUCT_NAME = PUGVPN;
+				PRODUCT_NAME = pugVPN;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -653,7 +658,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PUGVPN.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PUGVPN";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/pugVPN.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/pugVPN";
 			};
 			name = Debug;
 		};
@@ -670,7 +675,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.nukimo.PugVPN.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PUGVPN.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PUGVPN";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/pugVPN.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/pugVPN";
 			};
 			name = Release;
 		};
@@ -687,7 +692,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.nukimo.PugVPN.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PUGVPN.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PUGVPN";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/pugVPN.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/pugVPN";
 			};
 			name = Profile;
 		};
@@ -760,7 +765,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = AppIcon;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -817,7 +822,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = AppIcon;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
@@ -878,13 +883,14 @@
 				DEVELOPMENT_TEAM = DL4H45878X;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = pugVPN;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.nukimo.PugVPN;
-				PRODUCT_NAME = PUGVPN;
+				PRODUCT_NAME = pugVPN;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -903,13 +909,14 @@
 				DEVELOPMENT_TEAM = DL4H45878X;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = pugVPN;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.nukimo.PugVPN;
-				PRODUCT_NAME = PUGVPN;
+				PRODUCT_NAME = pugVPN;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";

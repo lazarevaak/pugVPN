@@ -86,16 +86,6 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Text(
-                        'Secure. Fast. Private.',
-                        style: TextStyle(
-                          color: isDark
-                              ? const Color(0xFFA8B5CC)
-                              : palette.secondaryText,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -116,30 +106,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           height: 28,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          'PUGVPN',
-                          style: TextStyle(
-                            color: isDark
-                                ? Colors.white
-                                : const Color(0xFF27456E),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.2,
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      'Secure. Fast. Cute.',
-                      style: TextStyle(
-                        color: isDark
-                            ? const Color(0xFF97A8C4)
-                            : const Color(0xFF6E86A8),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
                   ],
                 ),
               ),

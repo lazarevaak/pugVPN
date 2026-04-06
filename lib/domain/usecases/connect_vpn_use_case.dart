@@ -1,6 +1,7 @@
 import 'package:pug_vpn/core/config/app_env.dart';
 import 'package:pug_vpn/domain/entities/connected_vpn_session.dart';
 import 'package:pug_vpn/domain/entities/device_key_pair.dart';
+import 'package:pug_vpn/domain/entities/vpn_server.dart';
 import 'package:pug_vpn/domain/repositories/backend_repository.dart';
 import 'package:pug_vpn/domain/repositories/native_vpn_repository.dart';
 
@@ -19,6 +20,7 @@ class ConnectVpnUseCase {
     required bool useNativeTunnel,
     required List<String> selectedPackages,
     required List<String> allPackages,
+    String? preferredLocation,
     void Function(String status)? onProgress,
   }) async {
     await _ensureTunnelStoppedBeforeConnect(useNativeTunnel: useNativeTunnel);
@@ -38,7 +40,10 @@ class ConnectVpnUseCase {
       throw Exception('Backend returned no VPN servers.');
     }
 
-    final server = servers.first;
+    final server = _selectServer(
+      servers: servers,
+      preferredLocation: preferredLocation,
+    );
     onProgress?.call('Preparing VPN config...');
     final configResult = await _backendRepository.buildConfig(
       accessToken: token,
@@ -85,6 +90,34 @@ class ConnectVpnUseCase {
       location: server.location,
       details: server.name,
     );
+  }
+
+  VpnServer _selectServer({
+    required List<VpnServer> servers,
+    required String? preferredLocation,
+  }) {
+    if (preferredLocation == null || preferredLocation.trim().isEmpty) {
+      return servers.first;
+    }
+
+    final normalizedPreferred = _normalizeLocation(preferredLocation);
+    for (final server in servers) {
+      if (_normalizeLocation(server.location) == normalizedPreferred) {
+        return server;
+      }
+    }
+
+    return servers.first;
+  }
+
+  String _normalizeLocation(String value) {
+    final normalized = value.trim().toUpperCase();
+    return switch (normalized) {
+      'FI' || 'FINLAND' => 'FINLAND',
+      'DE' || 'GERMANY' => 'GERMANY',
+      'US' || 'USA' || 'UNITED STATES' => 'UNITED STATES',
+      _ => normalized,
+    };
   }
 
   Future<DeviceKeyPair> _loadOrCreateDeviceKeyPair() async {

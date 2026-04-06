@@ -22,6 +22,7 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
@@ -32,12 +33,19 @@ flutter:
     - assets/images/connection_board.png
     - assets/images/onboarding_pug.png
 
+    - assets/pug_countries/pug_auto.png
     - assets/pug_countries/pug_finland.png
     - assets/pug_countries/pug_germany.png
-    - assets/pug_countries/pug_russia.png
     - assets/pug_countries/pug_usa.png
 
     - assets/flags/usa_flag.png
     - assets/flags/finland_flag.png
     - assets/flags/germany_flag.png
-    - assets/flags/russia_flag.png
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  macos:
+    generate: true
+    image_path: "assets/app_icon.png"
+  image_path: "assets/app_icon.png"

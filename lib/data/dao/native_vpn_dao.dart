@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 
 import 'package:pug_vpn/core/exceptions/backend_exception.dart';
@@ -143,6 +145,51 @@ class NativeVpnDao {
       throw const BackendException(
         'Installed apps are not available on this platform.',
       );
+    } on PlatformException catch (error) {
+      throw BackendException(error.message ?? error.code);
+    }
+  }
+
+  Future<List<DeviceApp>> pickInstalledApps() async {
+    try {
+      final result = await _channel.invokeMethod<List<Object?>>(
+        'pickInstalledApps',
+      );
+      return (result ?? <Object?>[])
+          .whereType<Map<Object?, Object?>>()
+          .map(DeviceApp.fromMap)
+          .where((DeviceApp app) => app.packageName.isNotEmpty)
+          .toList();
+    } on MissingPluginException {
+      throw const BackendException(
+        'Native app picker не найден на этой платформе.',
+      );
+    } on PlatformException catch (error) {
+      throw BackendException(error.message ?? error.code);
+    }
+  }
+
+  Future<Map<String, Uint8List>> loadInstalledAppIcons(List<DeviceApp> apps) async {
+    try {
+      final payload = apps
+          .map((DeviceApp app) => app.toMap())
+          .toList(growable: false);
+      final result = await _channel.invokeMethod<List<Object?>>(
+        'loadInstalledAppIcons',
+        payload,
+      );
+      final icons = <String, Uint8List>{};
+      for (final entry in result ?? <Object?>[]) {
+        if (entry is! Map<Object?, Object?>) continue;
+        final packageName = entry['packageName'] as String?;
+        final iconBase64 = entry['iconBase64'] as String?;
+        if (packageName == null || packageName.isEmpty) continue;
+        if (iconBase64 == null || iconBase64.isEmpty) continue;
+        icons[packageName] = base64Decode(iconBase64);
+      }
+      return icons;
+    } on MissingPluginException {
+      return <String, Uint8List>{};
     } on PlatformException catch (error) {
       throw BackendException(error.message ?? error.code);
     }

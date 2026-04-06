@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:pug_vpn/domain/entities/device_app.dart';
 import 'package:pug_vpn/domain/entities/device_key_pair.dart';
 import 'package:pug_vpn/data/dao/native_vpn_dao.dart';
@@ -27,6 +29,11 @@ class NativeVpnRepository {
       _dao.saveDeviceKeyPair(keyPair);
 
   Future<List<DeviceApp>> listInstalledApps() => _dao.listInstalledApps();
+
+  Future<List<DeviceApp>> pickInstalledApps() => _dao.pickInstalledApps();
+
+  Future<Map<String, Uint8List>> loadInstalledAppIcons(List<DeviceApp> apps) =>
+      _dao.loadInstalledAppIcons(apps);
 
   Future<bool> shareText(String text) => _dao.shareText(text);
 }

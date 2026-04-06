@@ -1,11 +1,15 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:pug_vpn/domain/entities/device_app.dart';
+
 import 'package:pug_vpn/presentation/localization/app_strings.dart';
+
 import 'package:pug_vpn/presentation/theme/app_theme.dart';
+
 import 'package:pug_vpn/presentation/viewmodels/app_selection_viewmodel.dart';
 import 'package:pug_vpn/presentation/viewmodels/home_viewmodel.dart';
 import 'package:pug_vpn/presentation/viewmodels/tab_viewmodel.dart';
@@ -34,6 +38,7 @@ class _SelectAppsPageState extends State<SelectAppsPage> {
     final palette = AppPalette.of(context);
     final vm = context.watch<AppSelectionViewModel>();
     final strings = AppStrings.of(context);
+    final topInset = defaultTargetPlatform == TargetPlatform.macOS ? 28.0 : 0.0;
 
     if (vm.isLoaded && !_initializedDraft) {
       _draftSelection
@@ -57,6 +62,7 @@ class _SelectAppsPageState extends State<SelectAppsPage> {
             ),
           ),
           SafeArea(
+            minimum: EdgeInsets.only(top: topInset),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
@@ -114,9 +120,7 @@ class _SelectAppsPageState extends State<SelectAppsPage> {
                     },
                     onReset: () {
                       setState(() {
-                        _draftSelection
-                          ..clear()
-                          ..addAll(vm.allPackages);
+                        _draftSelection.clear();
                       });
                     },
                   ),
@@ -132,13 +136,11 @@ class _SelectAppsPageState extends State<SelectAppsPage> {
 
                         if (vm.apps.isEmpty) {
                           return Center(
-                            child: Text(
-                              vm.errorMessage ?? strings.noAppsFound,
-                              style: TextStyle(
-                                color: palette.secondaryText,
-                                fontSize: 14,
-                              ),
-                              textAlign: TextAlign.center,
+                            child: _EmptyAppsState(
+                              palette: palette,
+                              message:
+                                  vm.errorMessage ??
+                                  strings.noAppsFound,
                             ),
                           );
                         }
@@ -146,13 +148,16 @@ class _SelectAppsPageState extends State<SelectAppsPage> {
                         return ListView.separated(
                           padding: const EdgeInsets.only(bottom: 12),
                           itemCount: vm.apps.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 10),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 10),
                           itemBuilder: (BuildContext context, int index) {
                             final app = vm.apps[index];
                             return _SelectAppTile(
                               app: app,
                               palette: palette,
-                              selected: _draftSelection.contains(app.packageName),
+                              selected: _draftSelection.contains(
+                                app.packageName,
+                              ),
                               onChanged: (bool value) {
                                 setState(() {
                                   if (value) {
@@ -253,12 +258,32 @@ class _SelectionActions extends StatelessWidget {
               onTap: onSelectAll,
             ),
             const SizedBox(width: 8),
-            _ActionChip(
-              label: strings.reset,
-              palette: palette,
-              onTap: onReset,
-            ),
+            _ActionChip(label: strings.reset, palette: palette, onTap: onReset),
           ],
+        ),
+      ],
+    );
+  }
+}
+
+class _EmptyAppsState extends StatelessWidget {
+  const _EmptyAppsState({
+    required this.palette,
+    required this.message,
+  });
+
+  final AppPalette palette;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Text(
+          message,
+          style: TextStyle(color: palette.secondaryText, fontSize: 14),
+          textAlign: TextAlign.center,
         ),
       ],
     );
@@ -385,10 +410,7 @@ class _SelectAppTile extends StatelessWidget {
 }
 
 class _AppIcon extends StatelessWidget {
-  const _AppIcon({
-    required this.app,
-    required this.palette,
-  });
+  const _AppIcon({required this.app, required this.palette});
 
   final DeviceApp app;
   final AppPalette palette;
@@ -407,24 +429,16 @@ class _AppIcon extends StatelessWidget {
           ? Image.memory(
               app.iconBytes!,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _AppIconFallback(
-                label: app.label,
-                palette: palette,
-              ),
+              errorBuilder: (_, __, ___) =>
+                  _AppIconFallback(label: app.label, palette: palette),
             )
-          : _AppIconFallback(
-              label: app.label,
-              palette: palette,
-            ),
+          : _AppIconFallback(label: app.label, palette: palette),
     );
   }
 }
 
 class _AppIconFallback extends StatelessWidget {
-  const _AppIconFallback({
-    required this.label,
-    required this.palette,
-  });
+  const _AppIconFallback({required this.label, required this.palette});
 
   final String label;
   final AppPalette palette;
@@ -479,7 +493,9 @@ class _SaveButton extends StatelessWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  color: palette.isDark ? Colors.white : const Color(0xFFF8FBFF),
+                  color: palette.isDark
+                      ? Colors.white
+                      : const Color(0xFFF8FBFF),
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                 ),

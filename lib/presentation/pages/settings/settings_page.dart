@@ -4,8 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:pug_vpn/presentation/localization/app_strings.dart';
-import 'package:pug_vpn/presentation/pages/select_apps_page.dart';
+
+import 'package:pug_vpn/presentation/pages/settings/select_apps_page.dart';
+
 import 'package:pug_vpn/presentation/theme/app_theme.dart';
+
 import 'package:pug_vpn/presentation/viewmodels/home_viewmodel.dart';
 import 'package:pug_vpn/presentation/viewmodels/language_viewmodel.dart';
 import 'package:pug_vpn/presentation/viewmodels/tab_viewmodel.dart';
@@ -66,6 +69,21 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 8),
+                _SettingsActionTile(
+                  icon: Icons.person_rounded,
+                  title: strings.account,
+                  subtitle: 'demo@pugvpn.app',
+                  palette: palette,
+                ),
+                const SizedBox(height: 8),
+                _SettingsActionTile(
+                  icon: Icons.language_rounded,
+                  title: strings.language,
+                  subtitle: languageVm.displayName,
+                  palette: palette,
+                  onTap: () => _showLanguagePicker(context),
+                ),
                 const SizedBox(height: 10),
                 _SettingsSwitchTile(
                   icon: Icons.dark_mode_rounded,
@@ -76,21 +94,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   onChanged: (bool value) {
                     context.read<ThemeViewModel>().setDarkMode(value);
                   },
-                ),
-                const SizedBox(height: 18),
-                _SettingsActionTile(
-                  icon: Icons.person_rounded,
-                  title: strings.account,
-                  subtitle: 'demo@pugvpn.app',
-                  palette: palette,
-                ),
-                const SizedBox(height: 10),
-                _SettingsActionTile(
-                  icon: Icons.language_rounded,
-                  title: strings.language,
-                  subtitle: languageVm.displayName,
-                  palette: palette,
-                  onTap: () => _showLanguagePicker(context),
                 ),
                 const SizedBox(height: 10),
                 _SettingsActionTile(
@@ -105,27 +108,29 @@ class _SettingsPageState extends State<SettingsPage> {
                     );
                   },
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 6),
                 _SettingsActionTile(
                   icon: Icons.share_rounded,
                   title: strings.shareApp,
                   palette: palette,
                   onTap: () => _shareApp(context),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 6),
                 _SettingsActionTile(
                   icon: Icons.workspace_premium_rounded,
                   title: strings.subscription,
                   palette: palette,
                   onTap: () => context.read<TabViewModel>().changeTab(3),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 6),
                 _SettingsActionTile(
                   icon: Icons.info_rounded,
                   title: strings.about,
                   palette: palette,
                   onTap: () => _showAboutDialog(context),
                 ),
+                const SizedBox(height: 18),
+                _PromoBanner(palette: palette),
               ],
             ),
           ),
@@ -137,7 +142,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _showLanguagePicker(BuildContext context) async {
     final palette = AppPalette.of(context);
     final languageVm = context.read<LanguageViewModel>();
-    final strings = AppStrings.fromLanguage(languageVm.isRussian);
+    final strings = AppStrings.fromLanguage(languageVm.language);
 
     await showDialog<void>(
       context: context,
@@ -192,6 +197,33 @@ class _SettingsPageState extends State<SettingsPage> {
                     Navigator.of(dialogContext).pop();
                   },
                 ),
+                const SizedBox(height: 8),
+                _LanguageTile(
+                  label: strings.spanish,
+                  selected: languageVm.language == AppLanguage.spanish,
+                  onTap: () {
+                    languageVm.setLanguage(AppLanguage.spanish);
+                    Navigator.of(dialogContext).pop();
+                  },
+                ),
+                const SizedBox(height: 8),
+                _LanguageTile(
+                  label: strings.turkish,
+                  selected: languageVm.language == AppLanguage.turkish,
+                  onTap: () {
+                    languageVm.setLanguage(AppLanguage.turkish);
+                    Navigator.of(dialogContext).pop();
+                  },
+                ),
+                const SizedBox(height: 8),
+                _LanguageTile(
+                  label: strings.portuguese,
+                  selected: languageVm.language == AppLanguage.portuguese,
+                  onTap: () {
+                    languageVm.setLanguage(AppLanguage.portuguese);
+                    Navigator.of(dialogContext).pop();
+                  },
+                ),
               ],
             ),
           ),
@@ -206,9 +238,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _showAboutDialog(BuildContext context) async {
     final palette = AppPalette.of(context);
-    final strings = AppStrings.fromLanguage(
-      context.read<LanguageViewModel>().isRussian,
-    );
+    final strings = AppStrings.fromLanguage(context.read<LanguageViewModel>().language);
 
     await showDialog<void>(
       context: context,
@@ -322,13 +352,13 @@ class _SettingsSwitchTile extends StatelessWidget {
       child: Row(
         children: <Widget>[
           _LeadingIcon(icon: icon, palette: palette),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               title,
               style: TextStyle(
                 color: palette.primaryText,
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -376,7 +406,7 @@ class _SettingsActionTile extends StatelessWidget {
           child: Row(
             children: <Widget>[
               _LeadingIcon(icon: icon, palette: palette),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -385,17 +415,17 @@ class _SettingsActionTile extends StatelessWidget {
                       title,
                       style: TextStyle(
                         color: palette.primaryText,
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     if (subtitle != null) ...<Widget>[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 1),
                       Text(
                         subtitle!,
                         style: TextStyle(
                           color: palette.secondaryText,
-                          fontSize: 13,
+                          fontSize: 11,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -406,8 +436,8 @@ class _SettingsActionTile extends StatelessWidget {
               Icon(
                 Icons.chevron_right_rounded,
                 color: palette.secondaryText,
-                size: 24,
-              ),
+                  size: 22,
+                ),
             ],
           ),
         ),
@@ -429,7 +459,7 @@ class _SettingsCard extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
             gradient: LinearGradient(
@@ -455,13 +485,105 @@ class _LeadingIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 38,
-      height: 38,
+      width: 30,
+      height: 30,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(9),
         color: palette.softFill,
       ),
-      child: Icon(icon, color: palette.secondaryText, size: 20),
+      child: Icon(icon, color: palette.secondaryText, size: 16),
+    );
+  }
+}
+
+class _PromoBanner extends StatelessWidget {
+  const _PromoBanner({required this.palette});
+
+  final AppPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: <Color>[
+                const Color(0xFF6D8DFF).withValues(alpha: 0.28),
+                const Color(0xFF192436).withValues(alpha: 0.96),
+              ],
+            ),
+            border: Border.all(color: palette.border),
+          ),
+          child: Row(
+            children: <Widget>[
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  color: Colors.white.withValues(alpha: 0.10),
+                ),
+                child: const Icon(
+                  Icons.workspace_premium_rounded,
+                  color: Color(0xFFFFD76A),
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'Upgrade to Premium',
+                      style: TextStyle(
+                        color: palette.primaryText,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Faster regions, more locations, and no limits.',
+                      style: TextStyle(
+                        color: palette.secondaryText,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  color: const Color(0xFFFFD76A).withValues(alpha: 0.16),
+                  border: Border.all(
+                    color: const Color(0xFFFFD76A).withValues(alpha: 0.30),
+                  ),
+                ),
+                child: const Text(
+                  'Open',
+                  style: TextStyle(
+                    color: Color(0xFFFFE9A6),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:pug_vpn/presentation/localization/app_strings.dart';
-import 'package:pug_vpn/presentation/pages/home_page.dart';
-import 'package:pug_vpn/presentation/pages/locations_page.dart';
-import 'package:pug_vpn/presentation/pages/premium_page.dart';
-import 'package:pug_vpn/presentation/pages/settings_page.dart';
+
+import 'package:pug_vpn/presentation/pages/home/home_page.dart';
+import 'package:pug_vpn/presentation/pages/premium/premium_page.dart';
+import 'package:pug_vpn/presentation/pages/settings/settings_page.dart';
+
 import 'package:pug_vpn/presentation/theme/app_theme.dart';
+
 import 'package:pug_vpn/presentation/viewmodels/tab_viewmodel.dart';
 
 class RootPage extends StatelessWidget {
@@ -27,7 +29,6 @@ class RootPage extends StatelessWidget {
               index: vm.index,
               children: <Widget>[
                 const HomePage(),
-                const LocationsPage(),
                 const SettingsPage(),
                 const PremiumPage(),
               ],
@@ -63,7 +64,6 @@ class _GlassTabBar extends StatelessWidget {
     final strings = AppStrings.of(context);
     final items = <({IconData icon, String label})>[
       (icon: Icons.home_rounded, label: strings.homeTab),
-      (icon: Icons.location_on_rounded, label: strings.locationsTab),
       (icon: Icons.settings_rounded, label: strings.settingsTab),
       (icon: Icons.workspace_premium_rounded, label: strings.premiumTab),
     ];

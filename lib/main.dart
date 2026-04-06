@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:pug_vpn/core/providers.dart';
-import 'package:pug_vpn/presentation/pages/onboarding_page.dart';
+
+import 'package:pug_vpn/presentation/pages/entrance/onboarding_page.dart';
+
 import 'package:pug_vpn/presentation/theme/app_theme.dart';
+
 import 'package:pug_vpn/presentation/viewmodels/app_selection_viewmodel.dart';
 import 'package:pug_vpn/presentation/viewmodels/home_viewmodel.dart';
 import 'package:pug_vpn/presentation/viewmodels/language_viewmodel.dart';
